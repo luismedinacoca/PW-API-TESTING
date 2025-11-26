@@ -2,7 +2,7 @@ export class RequestHandler {
   private baseUrl: string = "";
   private defaultBaseUrl: string = "https://conduit-api.bondaracademy.com/api";
   private apiPath: string = "";
-  private apiParams: object = {};
+  private queryParams: object = {};
   private apiHeaders: object = {};
   private apiBody: object = {};
 
@@ -17,7 +17,7 @@ export class RequestHandler {
   }
 
   params(params: object) {
-    this.apiParams = params;
+    this.queryParams = params;
     return this;
   }
 
@@ -31,8 +31,12 @@ export class RequestHandler {
     return this;
   }
 
-  getUrl() {
+  private getUrl() {
     const url = new URL(`${this.baseUrl || this.defaultBaseUrl}${this.apiPath}`);
-    console.log("url: ", url.toString());
+
+    for (const [key, value] of Object.entries(this.queryParams)) {
+      url.searchParams.append(key, value);
+    }
+    console.log("\n🚀 url: ", url.toString(), "\n");
   }
 }
