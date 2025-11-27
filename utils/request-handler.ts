@@ -1,10 +1,18 @@
+import { APIRequestContext } from "@playwright/test";
+
 export class RequestHandler {
-  private baseUrl: string = "";
-  private defaultBaseUrl: string = "https://conduit-api.bondaracademy.com/api";
+  private request: APIRequestContext;
+  private baseUrl: string;
+  private defaultBaseUrl: string;
   private apiPath: string = "";
   private queryParams: object = {};
   private apiHeaders: object = {};
   private apiBody: object = {};
+
+  constructor(request: APIRequestContext, apiBaseUrl: string) {
+    this.request = request;
+    this.defaultBaseUrl = apiBaseUrl;
+  }
 
   url(url: string) {
     this.baseUrl = url;

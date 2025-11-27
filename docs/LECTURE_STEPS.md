@@ -1,7 +1,6 @@
-# Section 04: Building a Framework
+# 👨🏾‍💻 Section 04: Building a Framework
 
-
-## Visual Project Tree
+## 📚 Visual Project Tree
 
 ```
 PW-API-TESTING/
@@ -34,7 +33,7 @@ PW-API-TESTING/
 └── 📄 PROJECT_STRUCTURE.md                     # This file - project structure documentation
 ```
 
-## Project Overview
+## 📚 Project Overview
 
 ### Purpose
 This is a **Playwright API Testing** project designed to test REST API endpoints using Playwright's request API. The project demonstrates various testing patterns including basic API tests, hooks, and custom fixtures.
@@ -120,7 +119,7 @@ npx playwright test
 
 
 
-## Lecture 029: URL Builder
+## 📚 Lecture 029: URL Builder
 
 ### 1. Full Example and Result
 
@@ -228,3 +227,85 @@ test("First Test using RequestHandler class", async ({ api }) => {
     .getUrl();  // 💥
 });
 ```
+
+
+## 📚 Lecture 030: Request Handler Constructor
+
+### 1. Issue: Share **`request`** through the whole framework:
+```ts
+/* utils/request-handler.ts */
+import { APIRequestContext } from "@playwright/test";  // 👈🏽 ✅
+
+export class RequestHandler {
+  private request: APIRequestContext;  // 👈🏽 ✅
+  private baseUrl: string;
+  private defaultBaseUrl: string = "https://conduit-api.bondaracademy.com/api";
+  private apiPath: string = "";
+  private queryParams: object = {};
+  private apiHeaders: object = {};
+  private apiBody: object = {};
+
+  constructor(request: APIRequestContext, apiBaseUrl: string){  // 👈🏽 ✅
+    this.request = request;
+    this.defaultBaseUrl = apiBaseUrl;
+  }
+
+  url(url: string) {
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string) {
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object) {
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: object) {
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object) {
+    this.apiBody = body;
+    return this;
+  }
+
+  private getUrl() {
+    const url = new URL(`${this.baseUrl || this.defaultBaseUrl}${this.apiPath}`);
+
+    for (const [key, value] of Object.entries(this.queryParams)) {
+      url.searchParams.append(key, value);
+    }
+    console.log("\n🚀 url: ", url.toString(), "\n");
+  }
+}
+```
+
+### 2. Update the **`Fixture`**:
+```ts
+/* utils/fixtures.ts */
+import { test as base } from "@playwright/test";
+import { RequestHandler } from "./request-handler";
+
+export type TestOptions = {
+  api: RequestHandler;
+};
+
+export const test = base.extend<TestOptions>({
+  api: async ({ request }, use) => {  // 👈🏽 ✅
+    const baseUrl = "https://conduit-api.bondaracademy.com/api";  // 👈🏽 ✅
+    const requestHandler = new RequestHandler(request, baseUrl);  // 👈🏽 ✅
+    await use(requestHandler);
+  },
+});
+```
+
+
+## 📚 Lecture 0
+## 📚 Lecture 0
+## 📚 Lecture 0
