@@ -662,6 +662,10 @@ test("Third Test - GET Tags", async ({ api }) => {  // 👈🏽 ✅
 ```
 
 
+## 📚 Lecture 032: Post, Put, and Delete Requester
+
+
+
 ## 📚 Lecture 0
 ## 📚 Lecture 0
 ## 📚 Lecture 0

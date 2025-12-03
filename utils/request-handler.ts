@@ -47,8 +47,43 @@ export class RequestHandler {
     });
     expect(response.status()).toEqual(statusCode);
     const responseJSON = await response.json();
-    console.log("\n🚀 responseJSON: ", responseJSON);
+    //console.log("\n🚀 responseJSON: ", responseJSON);
     return responseJSON;
+  }
+
+  async postRequest(statusCode: number) {
+    const url = this.getUrl();
+    const response = await this.request.post(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+    expect(response.status()).toEqual(statusCode);
+    const responseJSON = await response.json();
+    //console.log("\n🚀 responseJSON: ", responseJSON);
+    return responseJSON;
+  }
+
+  async putRequest(statusCode: number) {
+    const url = this.getUrl();
+    const response = await this.request.put(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+    expect(response.status()).toEqual(statusCode);
+    const responseJSON = await response.json();
+    //console.log("\n🚀 responseJSON: ", responseJSON);
+    return responseJSON;
+  }
+
+  async deleteRequest(statusCode: number) {
+    const url = this.getUrl();
+    const response = await this.request.delete(url, {
+      headers: this.apiHeaders,
+    });
+    expect(response.status()).toEqual(statusCode);
+    //const responseJSON = await response.json(); // Does not return JSON for DELETE requests
+    //console.log("\n🚀 responseJSON: ", responseJSON);
+    return response;
   }
 
   private getUrl() {
@@ -57,7 +92,7 @@ export class RequestHandler {
     for (const [key, value] of Object.entries(this.queryParams)) {
       url.searchParams.append(key, value);
     }
-    console.log("\n🚀 url: ", url.toString(), "\n");
+    //console.log("\n🚀 url: ", url.toString(), "\n");
     return url.toString();
   }
 }
