@@ -1,18 +1,20 @@
 import { APIRequestContext, expect } from "@playwright/test";
+import { APILogger } from "./logger";
 
 export class RequestHandler {
   private request: APIRequestContext;
+  private logger: APILogger;
   private baseUrl: string;
   private defaultBaseUrl: string;
   private apiPath: string = "";
   private queryParams: object = {};
-  //private apiHeaders: object = {};
   private apiHeaders: Record<string, string> = {};
   private apiBody: object = {};
 
-  constructor(request: APIRequestContext, apiBaseUrl: string) {
+  constructor(request: APIRequestContext, apiBaseUrl: string, logger: APILogger) {
     this.request = request;
     this.defaultBaseUrl = apiBaseUrl;
+    this.logger = logger;
   }
 
   url(url: string) {
@@ -41,48 +43,104 @@ export class RequestHandler {
   }
 
   async getRequest(statusCode: number) {
+    // Get the URL
     const url = this.getUrl();
+
+    // Log the GET request
+    this.logger.logRequest("GET", url, this.apiHeaders, this.apiBody);
+
+    // Send the request
     const response = await this.request.get(url, {
       headers: this.apiHeaders,
     });
-    expect(response.status()).toEqual(statusCode);
+
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
     const responseJSON = await response.json();
-    //console.log("\n🚀 responseJSON: ", responseJSON);
+
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.getRequest);
     return responseJSON;
   }
 
   async postRequest(statusCode: number) {
+    // Get the URL
     const url = this.getUrl();
+
+    // Log the POST request
+    this.logger.logRequest("POST", url, this.apiHeaders, this.apiBody);
+
+    // Send the request
     const response = await this.request.post(url, {
       headers: this.apiHeaders,
       data: this.apiBody,
     });
-    expect(response.status()).toEqual(statusCode);
+
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
     const responseJSON = await response.json();
-    //console.log("\n🚀 responseJSON: ", responseJSON);
+
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.postRequest);
+
     return responseJSON;
   }
 
   async putRequest(statusCode: number) {
+    // Get the URL
     const url = this.getUrl();
+
+    // Log the PUT request
+    this.logger.logRequest("PUT", url, this.apiHeaders, this.apiBody);
+
+    // Send the PUT request
     const response = await this.request.put(url, {
       headers: this.apiHeaders,
       data: this.apiBody,
     });
-    expect(response.status()).toEqual(statusCode);
+
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
     const responseJSON = await response.json();
-    //console.log("\n🚀 responseJSON: ", responseJSON);
+
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.putRequest);
+
     return responseJSON;
   }
 
   async deleteRequest(statusCode: number) {
     const url = this.getUrl();
+
+    // Log the DELETE request
+    this.logger.logRequest("DELETE", url, this.apiHeaders);
+
     const response = await this.request.delete(url, {
       headers: this.apiHeaders,
     });
-    expect(response.status()).toEqual(statusCode);
-    //const responseJSON = await response.json(); // Does not return JSON for DELETE requests
-    //console.log("\n🚀 responseJSON: ", responseJSON);
+
+    // Obtain the actual status
+    const actualStatus = response.status();
+
+    // Log the response
+    this.logger.logResponse(actualStatus);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.deleteRequest);
+
     return response;
   }
 
@@ -94,5 +152,15 @@ export class RequestHandler {
     }
     //console.log("\n🚀 url: ", url.toString(), "\n");
     return url.toString();
+  }
+
+  // Private method to validate the status code in "expect(actualStatus).toEqual(statusCode);"
+  private statusCodeValidator(actualStatus: number, expectedStatus: number, callingMethod: Function) {
+    if (actualStatus !== expectedStatus) {
+      const logs = this.logger.getRecentLogs();
+      const error = new Error(`Expected status ${expectedStatus} but got ${actualStatus}\n\nRecent API Activity: \n${logs}`);
+      Error.captureStackTrace(error, callingMethod);
+      throw error;
+    }
   }
 }
