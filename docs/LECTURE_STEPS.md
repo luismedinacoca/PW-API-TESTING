@@ -662,10 +662,328 @@ test("Third Test - GET Tags", async ({ api }) => {  // 👈🏽 ✅
 ```
 
 
-## 📚 Lecture 032: Post, Put, and Delete Requester
+## 📚 Lecture 032: Post, Put, and Delete Requester:
 
 
+### 1. Create Post, Put, Delete requests in `request-handler` file:
+```ts
+/* utils/request-handler.ts */
+import { APIRequestContext, expect } from "@playwright/test";
+import { APILogger } from "./logger";
 
-## 📚 Lecture 0
+export class RequestHandler {
+  private request: APIRequestContext;
+  private baseUrl: string;
+  private defaultBaseUrl: string;
+  private apiPath: string = "";
+  private queryParams: object = {};
+  private apiHeaders: Record<string, string> = {};
+  private apiBody: object = {};
+
+  constructor(request: APIRequestContext, apiBaseUrl: string) {
+    this.request = request;
+    this.defaultBaseUrl = apiBaseUrl;
+    this.logger = logger;
+  }
+
+  url(url: string) {
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string) {
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object) {
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: Record<string, string>) {
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object) {
+    this.apiBody = body;
+    return this;
+  }
+
+  async getRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+
+    // Send the request
+    const response = await this.request.get(url, {
+      headers: this.apiHeaders,
+    });
+
+    // Obtain the actual status
+    expect(response.status()).toEqual(statusCode);
+
+    // Obtain the response JSON
+    const responseJSON = await response.json();
+
+    return responseJSON;
+  }
+
+  async postRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+
+    // Send the request
+    const response = await this.request.post(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+
+    // Obtain the actual status
+    expect(response.status()).toEqual(statusCode);
+
+    // Obtain the response JSON
+    const responseJSON = await response.json();
+
+    return responseJSON;
+  }
+
+  async putRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+
+    // Send the PUT request
+    const response = await this.request.put(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+
+    /// Obtain the actual status
+    expect(response.status()).toEqual(statusCode);
+
+    // Obtain the response JSON
+    const responseJSON = await response.json();
+
+    return responseJSON;
+  }
+
+  async deleteRequest(statusCode: number) {
+    const url = this.getUrl();
+
+    const response = await this.request.delete(url, {
+      headers: this.apiHeaders,
+    });
+
+    // Obtain the actual status
+    expect(response.status()).toEqual(statusCode);
+  }
+
+  private getUrl() {
+    const url = new URL(`${this.baseUrl || this.defaultBaseUrl}${this.apiPath}`);
+
+    for (const [key, value] of Object.entries(this.queryParams)) {
+      url.searchParams.append(key, value);
+    }
+    //console.log("\n🚀 url: ", url.toString(), "\n");
+    return url.toString();
+  }
+}
+```
+
+### 2. Verify inside one test:
+```ts
+/* tests/05-smokeTestFixturePostPutDeleteRequests.spec.ts */
+import { expect } from "@playwright/test";
+import { test } from "../utils/fixtures";
+
+let authToken: string;
+
+/******* LOGIN *******/
+test.beforeAll("runs before all", async ({ api }) => {
+  console.log("\n\n\n🚀 LOGIN");
+  const tokenResponse = await api
+    .path("/users/login")
+    .body({ user: { email: "suspiros@test.com", password: "Test!001" } })
+    .postRequest(200);
+
+  authToken = "Token " + tokenResponse.user.token;
+  console.log("\n 🔐 authToken: ", authToken);
+});
+
+
+/******* 🧪 Create and Delete an Article 🧪 *******/
+test("Create and Delete an Article", async ({ api }) => {
+  console.log("\n🚀 CREATE ARTICLE");
+  const newDate = Date.now();
+  const createArticleResponse = await api
+    .path("/articles")
+    .headers({ Authorization: authToken })
+    .body({
+      article: {
+        title: `Test TWO TEST ${newDate}`,
+        description: `Test TWO TEST ${newDate} - Description`,
+        body: "Test body",
+        tagList: ["suspiros", "payoneer"],
+      },
+    })
+    .postRequest(201);
+
+  const slugId = createArticleResponse.article.slug;
+  console.log("\n🚀 slugId: ", slugId);
+
+  console.log("\n🚀 GET ARTICLES");
+  const articleResponse = await api
+    .path(`/articles`)
+    .headers({ Authorization: authToken })
+    .getRequest(200);
+
+  expect(articleResponse.articles.find((a: any) => a.slug === slugId)).toBeDefined();
+
+  console.log("\n🚀 DELETE ARTICLE");
+  await api.path(`/articles/${slugId}`).headers({ Authorization: authToken }).deleteRequest(204);
+
+  console.log("\n🚀 GET ARTICLES - verify deleted");
+  const articleDoubleResponse = await api
+    .path(`/articles`)
+    .headers({ Authorization: authToken })
+    .getRequest(200);
+
+  // Verify that the article is not present in the response!
+  expect(articleDoubleResponse.articles.every((a: any) => a.slug !== slugId)).toBeTruthy();
+});
+```
+
+![Expected Result - Create & Delete requests](../img/section04-lecture032-001.png)
+
+```ts
+/* tests/05-smokeTestFixturePostPutDeleteRequests.spec.ts */
+import { expect } from "@playwright/test";
+import { test } from "../utils/fixtures";
+
+let authToken: string;
+
+/******* LOGIN *******/
+test.beforeAll("runs before all", async ({ api }) => {
+  console.log("\n\n\n🚀 LOGIN");
+  const tokenResponse = await api
+    .path("/users/login")
+    .body({ user: { email: "suspiros@test.com", password: "Test!001" } })
+    .postRequest(200);
+
+  authToken = "Token " + tokenResponse.user.token;
+  console.log("\n 🔐 authToken: ", authToken);
+});
+
+/******* 🧪 Create, Update and Delete an Article 🧪 *******/
+test("Create, Update and Delete an Article", async ({ api }) => {
+  console.log("\n🚀 CREATE ARTICLE");
+  const newDate = Date.now();
+  const createArticleResponse = await api
+    .path("/articles")
+    .headers({ Authorization: authToken })
+    .body({
+      article: {
+        title: `Test TWO TEST ${newDate}`,
+        description: `Test TWO TEST ${newDate} - Description`,
+        body: "Test body",
+        tagList: [],
+      },
+    })
+    .postRequest(201);
+  const slugId = createArticleResponse.article.slug;
+  console.log("\n👍🏽 slugId: ", slugId);
+
+  console.log("\n🚀 GET ARTICLES");
+  const articleResponse = await api
+    .path(`/articles`)
+    .headers({ Authorization: authToken })
+    .getRequest(200);
+  expect(articleResponse.articles.find((a: any) => a.slug === slugId)).toBeDefined();
+
+  console.log("\n🚀 UPDATE ARTICLE");
+  const updateArticleResponse = await api
+    .path(`/articles/${slugId}`)
+    .headers({ Authorization: authToken })
+    .body({
+      article: {
+        title: `Test TWO UPDATED TEST ${newDate}`,
+        description: `Test TWO UPDATED TEST ${newDate} - Description`,
+        body: "******* Updated Test body *******",
+        tagList: ["suspiros", "payoneer"],
+        slug: slugId,
+      },
+    })
+    .putRequest(200);
+  const newSlugId = updateArticleResponse.article.slug;
+  console.log("\n👍🏽 newSlugId: ", newSlugId);
+
+  console.log("\n🚀 DELETE ARTICLE");
+  await api.path(`/articles/${newSlugId}`).headers({ Authorization: authToken }).deleteRequest(204);
+
+  console.log("\n🚀 GET ARTICLES - verify deleted");
+  const articleDoubleResponse = await api
+    .path(`/articles`)
+    .headers({ Authorization: authToken })
+    .getRequest(200);
+  // Verify that the article is not present in the response!
+  expect(articleDoubleResponse.articles.every((a: any) => a.slug !== newSlugId)).toBeTruthy();
+});
+```
+
+![Expected Result - Create, Update & Delete requests](../img/section04-lecture032-002.png)
+
+## 📚 Lecture 033: Custom Logger
+
+### 1. Context:
+_Any request fails but we don't know why it fails and there's not much information regarding this issue._
+
+![Error in toBeDefined](../img/section04-lecture033-001.png)
+![Error in status code](../img/section04-lecture033-002.png)
+
+### 2. Create `utils/logger.ts` file:
+```ts
+/* utils/logger.ts */
+export class APILogger {
+  private recentLogs: any[] = [];
+
+  logRequest(method: string, url: string, headers: Record<string, string>, body?: any) {
+    const logEntry = { method, url, headers, body };
+    this.recentLogs.push({ type: "Request Details", data: logEntry });
+  }
+
+  logResponse(statusCode: number, body?: any) {
+    const logEntry = { statusCode, body };
+    this.recentLogs.push({ type: "Response Details", data: logEntry });
+  }
+
+  getRecentLogs() {
+    const logs = this.recentLogs
+      .map((log) => {
+        return `\n===${log.type}===\n${JSON.stringify(log.data, null, 2)}\n`;
+      })
+      .join("\n\n");
+    return logs;
+  }
+}
+```
+
+### 3. Verify in test:
+```ts
+/* tests/06-TestwithLogger.spec.ts */
+import { expect } from "@playwright/test";
+import { test } from "../utils/fixtures";
+import { APILogger } from "../utils/logger";
+
+test("Test logger", async () => {
+  const logger = new APILogger();
+  logger.logRequest("POST", "https://test.com/api", { Authorization: "token" }, { foo: "bar" });
+  logger.logResponse(200, { foo: "bar" });
+  const logs = logger.getRecentLogs();
+  console.log(logs);
+});
+```
+
+![](../img/section04-lecture033-003.png)
+
 ## 📚 Lecture 0
 ## 📚 Lecture 0

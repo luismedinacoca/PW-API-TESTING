@@ -45,10 +45,7 @@ test("Create and Delete an Article", async ({ api }) => {
   console.log("\n🚀 slugId: ", slugId);
 
   console.log("\n🚀 GET ARTICLES");
-  const articleResponse = await api
-    .path(`/articles`)
-    .headers({ Authorization: authToken })
-    .getRequest(200);
+  const articleResponse = await api.path(`/articles`).headers({ Authorization: authToken }).getRequest(200);
 
   expect(articleResponse.articles.find((a: any) => a.slug === slugId)).toBeDefined();
 
@@ -56,10 +53,7 @@ test("Create and Delete an Article", async ({ api }) => {
   await api.path(`/articles/${slugId}`).headers({ Authorization: authToken }).deleteRequest(204);
 
   console.log("\n🚀 GET ARTICLES - verify deleted");
-  const articleDoubleResponse = await api
-    .path(`/articles`)
-    .headers({ Authorization: authToken })
-    .getRequest(200);
+  const articleDoubleResponse = await api.path(`/articles`).headers({ Authorization: authToken }).getRequest(200);
 
   // Verify that the article is not present in the response!
   expect(articleDoubleResponse.articles.every((a: any) => a.slug !== slugId)).toBeTruthy();
@@ -83,14 +77,9 @@ test("Create, Update and Delete an Article", async ({ api }) => {
   const slugId = createArticleResponse.article.slug;
   console.log("\n👍🏽 slugId: ", slugId);
 
-
   console.log("\n🚀 GET ARTICLES");
-  const articleResponse = await api
-    .path(`/articles`)
-    .headers({ Authorization: authToken })
-    .getRequest(200);
+  const articleResponse = await api.path(`/articles`).headers({ Authorization: authToken }).getRequest(200);
   expect(articleResponse.articles.find((a: any) => a.slug === slugId)).toBeDefined();
-
 
   console.log("\n🚀 UPDATE ARTICLE");
   const updateArticleResponse = await api
@@ -109,16 +98,11 @@ test("Create, Update and Delete an Article", async ({ api }) => {
   const newSlugId = updateArticleResponse.article.slug;
   console.log("\n👍🏽 newSlugId: ", newSlugId);
 
-
   console.log("\n🚀 DELETE ARTICLE");
   await api.path(`/articles/${newSlugId}`).headers({ Authorization: authToken }).deleteRequest(204);
 
-
   console.log("\n🚀 GET ARTICLES - verify deleted");
-  const articleDoubleResponse = await api
-    .path(`/articles`)
-    .headers({ Authorization: authToken })
-    .getRequest(200);
+  const articleDoubleResponse = await api.path(`/articles`).headers({ Authorization: authToken }).getRequest(200);
   // Verify that the article is not present in the response!
   expect(articleDoubleResponse.articles.every((a: any) => a.slug !== newSlugId)).toBeTruthy();
 });
