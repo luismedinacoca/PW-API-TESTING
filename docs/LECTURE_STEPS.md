@@ -1,5 +1,105 @@
 # 👨🏾‍💻 Section 04: Building a Framework
 
+## 📋 Project Overview
+
+This project demonstrates the **step-by-step construction of a custom API testing framework** using Playwright and TypeScript. The framework provides a fluent, chainable API for building HTTP requests, making API testing more readable, maintainable, and efficient.
+
+### What This Project Does
+
+The framework evolves through six progressive lectures (029-034), starting from basic URL building to a complete HTTP client with:
+
+- **Fluent API Design**: Chainable methods (`url()`, `path()`, `params()`, `headers()`, `body()`) for intuitive request construction
+- **Full HTTP Support**: GET, POST, PUT, and DELETE methods with automatic status code validation
+- **Custom Logging**: Comprehensive request/response logging for enhanced debugging
+- **Error Handling**: Detailed error messages with full API activity context when tests fail
+- **Playwright Integration**: Custom fixtures that seamlessly integrate with Playwright's test framework
+
+### Technology Stack
+
+- **Testing Framework**: Playwright Test (`@playwright/test`)
+- **Language**: TypeScript
+- **Target API**: Conduit API (`https://conduit-api.bondaracademy.com/api`)
+
+### Key Components
+
+- **`RequestHandler`**: Core class implementing the fluent API pattern for HTTP requests
+- **`APILogger`**: Custom logging system capturing request/response details
+- **Custom Fixtures**: Playwright fixtures providing `RequestHandler` instances to all tests
+- **Test Suite**: Progressive examples demonstrating CRUD operations and best practices
+
+This educational project serves as a practical guide for building maintainable, scalable API testing frameworks from scratch.
+
+## 📑 Table of Contents
+
+- [👨🏾‍💻 Section 04: Building a Framework](#-section-04-building-a-framework)
+  - [📋 Project Overview](#-project-overview)
+    - [What This Project Does](#what-this-project-does)
+    - [Technology Stack](#technology-stack)
+    - [Key Components](#key-components)
+  - [📑 Table of Contents](#-table-of-contents)
+  - [📚 Visual Project Tree](#-visual-project-tree)
+  - [📚 Project Overview](#-project-overview-1)
+    - [Purpose](#purpose)
+    - [Technology Stack](#technology-stack-1)
+    - [Key Components](#key-components-1)
+      - [📁 Configuration Files](#-configuration-files)
+      - [📁 Test Files (`tests/`)](#-test-files-tests)
+      - [📁 Utility Modules (`utils/`)](#-utility-modules-utils)
+      - [📁 Documentation (`docs/`)](#-documentation-docs)
+    - [API Endpoints Tested](#api-endpoints-tested)
+    - [Test Execution](#test-execution)
+    - [Generated Directories](#generated-directories)
+    - [Git Status](#git-status)
+- [🧳 Section 04: Building a Framework](#-section-04-building-a-framework-1)
+  - [📚 Lecture 029: URL Builder](#-lecture-029-url-builder)
+    - [🧠 29.1 Context](#-291-context)
+    - [⚙️ 29.2 Updating code according the context](#️-292-updating-code-according-the-context)
+      - [29.2.1 Full Example and Result](#2921-full-example-and-result)
+      - [29.2.2 Fixture Implementation](#2922-fixture-implementation)
+      - [29.2.3 Request Handler Implementation](#2923-request-handler-implementation)
+      - [29.2.4 Test Implementation](#2924-test-implementation)
+    - [🧱 29.3 Pending Fixes (TODO)](#-293-pending-fixes-todo)
+  - [📚 Lecture 030: Request Handler Constructor](#-lecture-030-request-handler-constructor)
+    - [🧠 30.1 Context](#-301-context)
+    - [⚙️ 30.2 Updating code according the context](#️-302-updating-code-according-the-context)
+      - [30.2.1 Request Handler Constructor Implementation](#3021-request-handler-constructor-implementation)
+      - [30.2.2 Updated Fixture Implementation](#3022-updated-fixture-implementation)
+    - [🧱 30.3 Pending Fixes (TODO)](#-303-pending-fixes-todo)
+  - [📚 Lecture 031: Get Requester](#-lecture-031-get-requester)
+    - [🧠 31.1 Context](#-311-context)
+    - [⚙️ 31.2 Updating code according the context](#️-312-updating-code-according-the-context)
+      - [31.2.1 Create the `getRequest` Method](#3121-create-the-getrequest-method)
+      - [31.2.2 Test Implementation](#3122-test-implementation)
+      - [31.2.3 Expected Result](#3123-expected-result)
+      - [31.2.4 Adding Assertion to `getRequest` Method](#3124-adding-assertion-to-getrequest-method)
+      - [31.2.5 Updated Test with Assertions](#3125-updated-test-with-assertions)
+      - [31.2.6 Applying `getRequest` to `/tags` Endpoint](#3126-applying-getrequest-to-tags-endpoint)
+    - [🧱 31.3 Pending Fixes (TODO)](#-313-pending-fixes-todo)
+  - [📚 Lecture 032: Post, Put, and Delete Requester](#-lecture-032-post-put-and-delete-requester)
+    - [🧠 32.1 Context](#-321-context)
+    - [⚙️ 32.2 Updating code according the context](#️-322-updating-code-according-the-context)
+      - [32.2.1 Create Post, Put, Delete Request Methods](#3221-create-post-put-delete-request-methods)
+      - [32.2.2 Test Implementation - Create and Delete Article](#3222-test-implementation---create-and-delete-article)
+      - [32.2.3 Test Implementation - Create, Update and Delete Article](#3223-test-implementation---create-update-and-delete-article)
+    - [🧱 32.3 Pending Fixes (TODO)](#-323-pending-fixes-todo)
+  - [📚 Lecture 033: Custom Logger](#-lecture-033-custom-logger)
+    - [🧠 33.1 Context](#-331-context)
+    - [⚙️ 33.2 Updating code according the context](#️-332-updating-code-according-the-context)
+      - [33.2.1 Problem Illustration](#3321-problem-illustration)
+      - [33.2.2 Create `utils/logger.ts` File](#3322-create-utilsloggerts-file)
+      - [33.2.3 Logger Implementation](#3323-logger-implementation)
+      - [33.2.4 Test Implementation](#3324-test-implementation)
+    - [🧱 33.3 Pending Fixes (TODO)](#-333-pending-fixes-todo)
+  - [📚 Lecture 034: Status Code Validator](#-lecture-034-status-code-validator)
+    - [🧠 34.1 Context](#-341-context)
+    - [⚙️ 34.2 Updating code according the context](#️-342-updating-code-according-the-context)
+      - [34.2.1 Update Fixture to Include Logger](#3421-update-fixture-to-include-logger)
+      - [34.2.2 Update `request-handler.ts` File with Logger Integration](#3422-update-request-handlerts-file-with-logger-integration)
+      - [34.2.3 Create Custom Status Code Validator](#3423-create-custom-status-code-validator)
+      - [34.2.4 Apply `statusCodeValidator` to All Request Methods](#3424-apply-statuscodevalidator-to-all-request-methods)
+    - [🧱 34.3 Pending Fixes (TODO)](#-343-pending-fixes-todo)
+
+
 ## 📚 Visual Project Tree
 
 ```
@@ -117,13 +217,29 @@ npx playwright test
 - Modified files: `tests/04-smokeTestWithFixture.spec.ts`, `utils/request-handler.ts`
 - Untracked: `docs/` directory
 
+---
 
+# 🧳 Section 04: Building a Framework
 
 ## 📚 Lecture 029: URL Builder
 
-### 1. Full Example and Result
+### 🧠 29.1 Context
 
-#### Let’s assume the following values:
+This lecture introduces the URL Builder pattern for constructing API endpoints dynamically. The `RequestHandler` class implements a fluent API design that allows chaining methods to build URLs with query parameters. The core functionality includes:
+
+- Building base URLs with optional custom base URLs
+- Appending API paths
+- Adding query parameters dynamically
+- Using a default base URL when none is specified
+- Creating a custom fixture to provide the RequestHandler instance to all tests
+
+The `getUrl()` method uses the native `URL` API to properly construct URLs with query parameters, ensuring proper encoding and formatting.
+
+### ⚙️ 29.2 Updating code according the context
+
+#### 29.2.1 Full Example and Result
+
+Let's assume the following values:
 
 ```ts
 this.baseUrl = "https://api.example.com";
@@ -131,22 +247,23 @@ this.apiPath = "/articles";
 this.queryParams = { limit: 10, tag: "js", featured: true };
 ```
 
-#### First, the getUrl() method builds the base URL:
+First, the getUrl() method builds the base URL:
 ```ts
 const url = new URL("https://api.example.com/articles");
 ```
 
-#### Then the `for` loop will perform 3 iterations:
+Then the `for` loop will perform 3 iterations:
 * Iteration 1: `key = "limit"`, `value = 10` → adds `?limit=10`
 * Iteration 2: `key = "tag"`, `value = "js"` → adds `&tag=js`
 * Iteration 3: `key = "featured"`, `value = true` → adds `&featured=true`
 
-#### Final Result:
+Final Result:
 ```bash
 https://api.example.com/articles?limit=10&tag=js&featured=true
 ```
 
-### 2. fixture:
+#### 29.2.2 Fixture Implementation
+
 ```ts
 /* utils/fixtures.ts */
 import { test as base } from "@playwright/test";
@@ -164,7 +281,8 @@ export const test = base.extend<TestOptions>({
 })
 ```
 
-### 3. Request-handler
+#### 29.2.3 Request Handler Implementation
+
 ```ts
 /* utils/request-handler.ts */
 export class RequestHandler {
@@ -211,8 +329,8 @@ export class RequestHandler {
 }
 ```
 
+#### 29.2.4 Test Implementation
 
-### 4. SmokeTextqWithFixture.spec.ts:
 ```ts
 /* tests/04-smokeTestWithFixture.spec.ts */
 import { test } from "../utils/fixtures";
@@ -228,10 +346,33 @@ test("First Test using RequestHandler class", async ({ api }) => {
 });
 ```
 
+### 🧱 29.3 Pending Fixes (TODO)
+
+```md
+- [ ] The `getUrl()` method is private but called directly in tests - needs to be made public or a public method should wrap it
+- [ ] Add proper TypeScript types for `queryParams`, `apiHeaders`, and `apiBody` instead of using `object`
+- [ ] Implement error handling for invalid URLs
+- [ ] Add validation for required parameters before building URL
+```
+
 
 ## 📚 Lecture 030: Request Handler Constructor
 
-### 1. Issue: Share **`request`** through the whole framework:
+### 🧠 30.1 Context
+
+This lecture addresses the need to share the Playwright `APIRequestContext` (the `request` object) throughout the framework. Previously, the `RequestHandler` class didn't have access to the request context, which is essential for making actual HTTP requests. 
+
+The solution involves:
+- Adding a constructor to `RequestHandler` that accepts `APIRequestContext` and a base URL
+- Updating the fixture to pass the `request` object from Playwright's test context
+- Making the base URL configurable through the constructor instead of hardcoding it
+
+This change enables the `RequestHandler` to make actual API calls using Playwright's request API, setting the foundation for implementing HTTP methods like GET, POST, PUT, and DELETE.
+
+### ⚙️ 30.2 Updating code according the context
+
+#### 30.2.1 Request Handler Constructor Implementation
+
 ```ts
 /* utils/request-handler.ts */
 import { APIRequestContext } from "@playwright/test";  // 👈🏽 ✅
@@ -286,7 +427,8 @@ export class RequestHandler {
 }
 ```
 
-### 2. Update the **`Fixture`**:
+#### 30.2.2 Updated Fixture Implementation
+
 ```ts
 /* utils/fixtures.ts */
 import { test as base } from "@playwright/test";
@@ -305,10 +447,34 @@ export const test = base.extend<TestOptions>({
 });
 ```
 
+### 🧱 30.3 Pending Fixes (TODO)
+
+```md
+- [ ] Remove unused `defaultBaseUrl` initialization since it's now set in constructor
+- [ ] Add null/undefined checks for `request` parameter in constructor
+- [ ] Consider making baseUrl optional with a fallback to default
+- [ ] Add JSDoc comments to document constructor parameters
+```
+
 
 ## 📚 Lecture 031: Get Requester
 
-### 1. Create the **`getRequest`** method in **`request-handler.ts`**:
+### 🧠 31.1 Context
+
+This lecture implements the first HTTP method (`getRequest`) in the `RequestHandler` class. The implementation includes:
+
+- Creating an async `getRequest()` method that makes actual GET requests using Playwright's request API
+- Updating the `getUrl()` method to return the URL string (fixing a missing return statement from the previous lecture)
+- Improving type safety by changing `apiHeaders` from `object` to `Record<string, string>`
+- Making the `headers()` method accept properly typed headers
+- The method sends the request, parses the JSON response, and returns it
+
+This enables the framework to make actual API calls and retrieve data, moving from URL building to functional HTTP requests.
+
+### ⚙️ 31.2 Updating code according the context
+
+#### 31.2.1 Create the `getRequest` Method
+
 ```ts
 /* utils/request-handler.ts */
 import { APIRequestContext } from "@playwright/test";
@@ -371,8 +537,8 @@ export class RequestHandler {
 }
 ```
 
+#### 31.2.2 Test Implementation
 
-### 2. Create a second test:
 ```ts
 /* tests/04-smokeTestWithFixture.spec.ts */
 import { test } from "../utils/fixtures";
@@ -385,7 +551,8 @@ test("Second Test - GET Articles", async ({ api }) => {  // 👈🏽 ✅ (1)
 });
 ```
 
-#### 2.1. Expected Result:
+#### 31.2.3 Expected Result
+
 ```bash
 🚀 url:  https://conduit-api.bondaracademy.com/api/articles?limit=10&offset=0 
 
@@ -408,139 +575,7 @@ test("Second Test - GET Articles", async ({ api }) => {  // 👈🏽 ✅ (1)
       favoritesCount: 980,
       author: [Object]
     },
-    {
-      slug: 'The-value-of-pre-recorded-video-classes.-The-most-efficient-approach-to-tranfer-the-knowledge-1',
-      title: 'The value of pre-recorded video classes. The most efficient approach to tranfer the knowledge',
-      description: 'As educational practices evolve, video tutorials have emerged as the most efficient method for imparting theoretical knowledge. At Bondar Academy, we prioritize expertly structured and crafted video tutorials, ensuring you learn quickly and effectively and advance your skills.',
-      body: 'At Bondar Academy, we prioritize the value of your time and the efficiency of your education, distinguishing our approach from traditional colleges and live boot camps. Forget long, tedious live lectures on a fixed schedule. With us, you learn at your convenience and pace through optimized, structured video lectures. \n' +
-        '\n' +
-        'We understand your goal is rapid knowledge acquisition. Our pre-recorded and well-organized lectures are designed precisely for this, ensuring no slowdowns from group dynamics or unrelated instructor anecdotes. \n' +
-        '\n' +
-        'Dive straight into the subject matter, learn efficiently, and if questions arise, our immediate support on the Slack Workspace is there to streamline your learning process and swiftly remove any roadblocks.',
-      tagList: [Array],
-      createdAt: '2024-01-27T21:50:38.825Z',
-      updatedAt: '2024-01-27T21:50:38.825Z',
-      favorited: false,
-      favoritesCount: 407,
-      author: [Object]
-    },
-    {
-      slug: 'Mastering-Knowledge-with-Self-Assessments:-Identifying-and-Bridging-Learning-Gaps-in-Education-1',
-      title: 'Mastering Knowledge with Self-Assessments: Identifying and Bridging Learning Gaps in Education',
-      description: "Self-assessment is an essential tool for gauging your understanding of lecture material. It answers critical questions: Have you grasped everything correctly? Is there anything you've missed? Are you prepared for the next lesson? These assessments ensure that you build a solid foundation of knowledge, confidently and efficiently paving the way for swift progress and effective learning outcomes.",
-      body: "Traditional educational institutions, such as colleges and universities, commonly use tests and assessments to measure knowledge. This approach is effective for gauging student performance, but it's not without drawbacks. In these settings, assessments after every lecture aren't feasible due to the time required for teachers to evaluate them. This often leads to students having a false sense of understanding, believing they've comprehended all aspects of a lecture when, in reality, small but crucial details might be missed. These 'knowledge gaps' can accumulate, making more complex topics difficult to grasp later on.\n" +
-        '\n' +
-        "At Bondar Academy, we address this challenge by implementing self-assessments after every lecture. These are designed to cover key questions that ensure a thorough understanding of the material, essential for comfort and success in future lectures. The number of questions varies, ranging from 3-4 to 15-20, depending on the lecture's significance and the volume of critical information. With these self-assessments, students receive immediate feedback, helping them determine if they've fully understood the lecture or if they need to revisit certain parts or seek assistance from our instructors in the Slack Workspace.",
-      tagList: [Array],
-      createdAt: '2024-01-27T21:48:36.340Z',
-      updatedAt: '2024-01-27T21:48:36.340Z',
-      favorited: false,
-      favoritesCount: 203,
-      author: [Object]
-    },
-    {
-      slug: 'Practical-Implementation-of-Skills:-Homework-Assignments-with-Instructor-Supervision-1',
-      title: 'Practical Implementation of Skills: Homework Assignments with Instructor Supervision',
-      description: 'Knowledge or skills not reinforced through practical exercises can quickly fade, often faster than anticipated. Homework, particularly in tasks like writing your own code, is crucial for honing these skills and cementing your understanding. At Bondar Academy, we ensure this vital step by assigning homework, rigorously evaluating the outcomes, and providing valuable feedback to guide your learning journey.',
-      body: 'Homework assignments are a fundamental component of the educational methodology at Bondar Academy, especially in technical education where learning a new programming language or framework is involved. The key to mastering these skills lies in writing code; the more you write, the better you become. However, merely replicating code seen in lectures leads to minimal learning. Often, this approach leaves students unclear about why their code works the way it does, as they focus on copying rather than understanding.\n' +
-        '\n' +
-        'A homework assignment at Bondar Academy starts with a blank page, challenging students to apply all their knowledge to write the first line of code. This process is more demanding than it appears. As you write each line, understanding and reasoning grow, making your code meaningful and comprehensible. You learn to write code that makes sense to you, enhancing your understanding.\n' +
-        '\n' +
-        "In completing these assignments, you engage the 'thinking' part of your brain, transforming theoretical knowledge into practical skills. Recognizing the crucial role of homework in learning, our instructors at Bondar Academy are always available to assist with any challenges. Just reach out on Slack, and you'll receive the guidance and support needed for successful completion. At Bondar Academy, we fully understand the importance of homework assignments for the best outcome, so our instructors are always here to assist if you have any difficulties with completing them. Just ask in Slack and you'll be guided and assisted.",
-      tagList: [Array],
-      createdAt: '2024-01-27T21:46:09.512Z',
-      updatedAt: '2024-01-27T21:46:09.512Z',
-      favorited: false,
-      favoritesCount: 85,
-      author: [Object]
-    },
-    {
-      slug: 'Embracing-Daily-Git-Routines:-Real-Code-Reviews-on-GitHub-for-Effective-Coding-Practice.-1',
-      title: 'Embracing Daily Git Routines: Real Code Reviews on GitHub for Effective Coding Practice.',
-      description: 'Learning to code is just one part of a larger skill set; effectively managing and organizing code is equally crucial. At Bondar Academy, we integrate Git and platforms like GitHub into the core learning cycle. With us, using Git becomes a regular routine, where organizing code in branches, storing it in remote repositories, and collaborating with others through strategies like branching, merging, pull requests, and code reviews are standard practice.',
-      body: 'At Bondar Academy, mastering Git and GitHub is a fundamental step before delving into frameworks or programming languages. Effective code management, organization, and storage are crucial skills, and Git is the premier tool for this purpose. However, many learners initially find Git challenging due to its complexity and non-intuitive nature. To address this, our instructors have developed structured lectures on Git and GitHub, ensuring an efficient and thorough understanding of these essential tools. Git lessons are a mandatory prerequisite in every class. For a glimpse into our teaching approach, visit our YouTube channel: https://www.youtube.com/@BondarAcademy/playlists.\n' +
-        '\n' +
-        'In our courses, all homework assignments are reviewed using GitHub pull requests, mirroring the workflow in real-world software development environments. Students submit their code to their working branch for review. Our instructors then provide feedback, suggesting modifications or adjustments for pull request approval. This iterative process is repeated throughout the course, establishing Git usage as a natural and routine part of your coding practice.',
-      tagList: [Array],
-      createdAt: '2024-01-27T21:42:31.491Z',
-      updatedAt: '2024-01-27T21:42:31.491Z',
-      favorited: false,
-      favoritesCount: 91,
-      author: [Object]
-    },
-    {
-      slug: 'Engaging-in-Live-Zoom-Sessions:-Interact-with-Instructors-and-Peers-Ask-Questions-in-Real-Time-1',
-      title: 'Engaging in Live Zoom Sessions: Interact with Instructors and Peers, Ask Questions in Real-Time',
-      description: 'In our increasingly online world, personal engagement remains a crucial element of effective learning. At Bondar Academy, we address this by hosting live Zoom sessions. These sessions provide a platform for live interaction between instructors and students, and among students themselves. Complementing our Slack channel, these live sessions offer an additional avenue for asking questions and engaging in meaningful discussions.',
-      body: 'In our increasingly online world, personal engagement remains a crucial element of effective learning. \n' +
-        'At Bondar Academy, we address this by hosting live Zoom sessions. These sessions provide a platform for live interaction between instructors and students and among students themselves. Complementing our Slack channel, these live sessions offer an additional avenue for asking questions and engaging in meaningful discussions.',
-      tagList: [Array],
-      createdAt: '2024-01-27T21:39:50.587Z',
-      updatedAt: '2024-01-27T21:39:50.587Z',
-      favorited: false,
-      favoritesCount: 65,
-      author: [Object]
-    },
-    {
-      slug: 'Utilizing-Slack-for-Continuous-Engagement:-Connect-with-Instructors-Share-Insights-and-Collaborate-1',
-      title: 'Utilizing Slack for Continuous Engagement: Connect with Instructors, Share Insights, and Collaborate',
-      description: 'Slack stands out as a widely-used messaging and collaboration platform, celebrated for its convenience and versatility. It enables simultaneous participation in multiple conversations, supports comments and emoji reactions, and allows users to share screenshots, videos, and code snippets. Its functionality extends to making calls in huddle sessions. Given these robust features, Bondar Academy has chosen Slack as our primary communication platform, facilitating seamless interaction and collaboration.',
-      body: "As a new member of Bondar Academy, one of your initial steps should be registering for the Bondar Academy Slack Workspace. Upon registration at Bondar Academy, you'll receive a welcome email containing the URL to join. This Workspace serves as a central hub for communication with instructors and fellow students. Whether you have a question, need to share code, or want to upload screenshots, Slack makes it easy and efficient. Moreover, its compatibility with both desktop and mobile devices, by downloading and installing the app, ensures you can stay connected with your instructors and the community wherever you go.",
-      tagList: [Array],
-      createdAt: '2024-01-27T21:38:27.992Z',
-      updatedAt: '2024-01-27T21:38:27.992Z',
-      favorited: false,
-      favoritesCount: 61,
-      author: [Object]
-    },
-    {
-      slug: 'Stay-Ahead-with-Bondar-Academy:-Subscribe-to-Our-YouTube-channel-for-Latest-Tech-and-Education-Updates-1',
-      title: 'Stay Ahead with Bondar Academy: Subscribe to Our YouTube channel for Latest Tech and Education Updates',
-      description: "Who doesn't appreciate high-quality free resources? YouTube serves as an ideal platform for sharing the latest news, updates, and a wealth of tips and tricks in test automation and technology. Keep abreast of these invaluable insights by subscribing to the @bondaracademy YouTube channel.",
-      body: "Who doesn't appreciate high-quality free resources? \n" +
-        '\n' +
-        'YouTube serves as an ideal platform for sharing the latest news, updates, and a wealth of tips and tricks in test automation and technology. \n' +
-        '\n' +
-        'Keep abreast of these invaluable insights by subscribing to our YouTube channel: https://www.youtube.com/@bondaracademy',
-      tagList: [Array],
-      createdAt: '2024-01-27T21:36:32.360Z',
-      updatedAt: '2024-01-27T21:36:32.360Z',
-      favorited: false,
-      favoritesCount: 59,
-      author: [Object]
-    },
-    {
-      slug: "Explore-the-Latest-in-Learning:-Bondar-Academy-Blog's-Educational-Insights-from-Our-Experts-1",
-      title: "Explore the Latest in Learning: Bondar Academy Blog's Educational Insights from Our Experts",
-      description: 'Discover a treasure trove of knowledge on the Bondar Academy blog. Here, we share an array of tips, techniques, and valuable educational materials, all designed to keep you abreast of the latest technological trends and best practices. For easy access and continual learning, consider bookmarking our blog in your browser.',
-      body: "On the Bondar Academy blog, we consistently provide insightful and pertinent updates on the latest in technology, test automation, and industry best practices. For your convenience, we recommend adding our blog to your browser's bookmarks. Our commitment to keeping you informed is reflected in our weekly posts, each focusing on a significant topic of the week.\n" +
-        '\n' +
-        "We value your input and invite you to contribute to our ever-evolving content. If you have any suggestions or specific topics you'd like us to explore, please feel free to share your ideas in the Bondar Academy Slack workspace. \n" +
-        '\n' +
-        'Discover our blog here: https://www.bondaracademy.com/blog\n',
-      tagList: [Array],
-      createdAt: '2024-01-27T21:34:04.531Z',
-      updatedAt: '2024-01-27T21:34:04.531Z',
-      favorited: false,
-      favoritesCount: 60,
-      author: [Object]
-    },
-    {
-      slug: 'Take-the-Next-Step:-Join-Bondar-Academy-Today-and-Enroll-into-the-class-1',
-      title: 'Take the Next Step: Join Bondar Academy Today and Enroll into the class',
-      description: 'Are you prepared to transform your educational journey? Begin by signing up at Bondar Academy, then register for our Slack Workspace to start exploring. We offer a range of classes, with some being completely free and others featuring free previews of the initial sections. This allows you to experience our content and teaching approach firsthand, helping you make an informed decision before enrolling in a class.',
-      body: 'Are you prepared to transform your educational journey? \n' +
-        '\n' +
-        'Begin by signing up at Bondar Academy, then register for our Slack Workspace to start exploring. We offer a range of classes, with some being completely free and others featuring free previews of the initial sections. This allows you to experience our content and teaching approach firsthand, helping you make an informed decision before enrolling in a class.\n' +
-        '\n' +
-        'Click here to enroll: https://www.bondaracademy.com',
-      tagList: [Array],
-      createdAt: '2024-01-27T21:32:21.056Z',
-      updatedAt: '2024-01-27T21:32:21.056Z',
-      favorited: false,
-      favoritesCount: 65,
-      author: [Object]
-    }
+    // ... more articles ...
   ],
   articlesCount: 10
 }
@@ -549,9 +584,10 @@ test("Second Test - GET Articles", async ({ api }) => {  // 👈🏽 ✅ (1)
   1 passed (2.4s)
 ```
 
-### 3. Adding assertion as `expect` in `getRequest` method:
+#### 31.2.4 Adding Assertion to `getRequest` Method
+
 ```ts
-/*  */
+/* utils/request-handler.ts */
 import { APIRequestContext, expect } from "@playwright/test";  // 👈🏽 ✅ (1) add "expect"
 
 export class RequestHandler {
@@ -608,9 +644,10 @@ export class RequestHandler {
 }
 ```
 
-#### 3.1. Test must change:
+#### 31.2.5 Updated Test with Assertions
+
 ```ts
-/*  */
+/* tests/04-smokeTestWithFixture.spec.ts */
 import { test } from "../utils/fixtures";
 import { expect } from "@playwright/test";
 test("Second Test - GET Articles", async ({ api }) => {
@@ -624,7 +661,8 @@ test("Second Test - GET Articles", async ({ api }) => {
 });
 ```
 
-### 4. Apply `getRequest`to `/tags`:
+#### 31.2.6 Applying `getRequest` to `/tags` Endpoint
+
 ```ts
 /* tests/04-smokeTestWithFixture.spec.ts */
 import { expect } from "@playwright/test";
@@ -637,7 +675,7 @@ test("Third Test - GET Tags", async ({ api }) => {  // 👈🏽 ✅
 });
 ```
 
-#### 4.1 Expected Result:
+**Expected Result:**
 ```bash
 🚀 url:  https://conduit-api.bondaracademy.com/api/tags 
 
@@ -661,15 +699,41 @@ test("Third Test - GET Tags", async ({ api }) => {  // 👈🏽 ✅
   1 passed (1.6s)
 ```
 
+### 🧱 31.3 Pending Fixes (TODO)
 
-## 📚 Lecture 032: Post, Put, and Delete Requester:
+```md
+- [ ] Add error handling for network failures and timeouts
+- [ ] Consider adding retry logic for failed requests
+- [ ] Add support for response validation schemas
+- [ ] Implement request timeout configuration
+- [ ] Add support for different response content types (not just JSON)
+```
 
 
-### 1. Create Post, Put, Delete requests in `request-handler` file:
+## 📚 Lecture 032: Post, Put, and Delete Requester
+
+### 🧠 32.1 Context
+
+This lecture extends the `RequestHandler` class to support all HTTP methods: POST, PUT, and DELETE. Previously, only GET requests were implemented. Now the framework becomes a complete HTTP client capable of:
+
+- Creating resources with POST requests
+- Updating resources with PUT requests
+- Deleting resources with DELETE requests
+
+Each method follows the same pattern as `getRequest()`:
+- Builds the URL using `getUrl()`
+- Sends the request with appropriate headers and body
+- Validates the status code
+- Returns the JSON response (except DELETE which may not return a body)
+
+The implementation demonstrates a complete CRUD (Create, Read, Update, Delete) workflow by testing article creation, retrieval, update, and deletion in sequence.
+
+### ⚙️ 32.2 Updating code according the context
+
+#### 32.2.1 Create Post, Put, Delete Request Methods
 ```ts
 /* utils/request-handler.ts */
 import { APIRequestContext, expect } from "@playwright/test";
-import { APILogger } from "./logger";
 
 export class RequestHandler {
   private request: APIRequestContext;
@@ -683,7 +747,6 @@ export class RequestHandler {
   constructor(request: APIRequestContext, apiBaseUrl: string) {
     this.request = request;
     this.defaultBaseUrl = apiBaseUrl;
-    this.logger = logger;
   }
 
   url(url: string) {
@@ -790,7 +853,7 @@ export class RequestHandler {
 }
 ```
 
-### 2. Verify inside one test:
+#### 32.2.2 Test Implementation - Create and Delete Article
 ```ts
 /* tests/05-smokeTestFixturePostPutDeleteRequests.spec.ts */
 import { expect } from "@playwright/test";
@@ -854,6 +917,8 @@ test("Create and Delete an Article", async ({ api }) => {
 ```
 
 ![Expected Result - Create & Delete requests](../img/section04-lecture032-001.png)
+
+#### 32.2.3 Test Implementation - Create, Update and Delete Article
 
 ```ts
 /* tests/05-smokeTestFixturePostPutDeleteRequests.spec.ts */
@@ -932,25 +997,49 @@ test("Create, Update and Delete an Article", async ({ api }) => {
 
 ![Expected Result - Create, Update & Delete requests](../img/section04-lecture032-002.png)
 
+### 🧱 32.3 Pending Fixes (TODO)
+
+```md
+- [ ] Add support for PATCH method (partial updates)
+- [ ] Handle DELETE requests that return a response body
+- [ ] Add request/response interceptors for logging
+- [ ] Implement request cancellation/timeout handling
+- [ ] Add support for file uploads in POST/PUT requests
+- [ ] Consider adding a method to reset the handler state between requests
+```
+
 ## 📚 Lecture 033: Custom Logger
 
-### 1. Context:
-_Any request fails but we don't know why it fails and there's not much information regarding this issue._
+### 🧠 33.1 Context
+
+When API requests fail during testing, it's often difficult to diagnose the issue without detailed information about what was sent and what was received. The default error messages from Playwright don't provide enough context about:
+
+- The exact request that was made (method, URL, headers, body)
+- The response received (status code, response body)
+- The sequence of API calls leading up to the failure
+
+This lecture introduces a custom `APILogger` class that captures and stores request and response details. The logger maintains a history of recent API activity, which can be retrieved when an error occurs to provide comprehensive debugging information. This is especially useful when tests fail and you need to understand what happened during the API interaction.
+
+### ⚙️ 33.2 Updating code according the context
+
+#### 33.2.1 Problem Illustration
 
 ![Error in toBeDefined](../img/section04-lecture033-001.png)
 ![Error in status code](../img/section04-lecture033-002.png)
 
-### 2. Create `utils/logger.ts` file:
+#### 33.2.2 Create `utils/logger.ts` File
 ```ts
 /* utils/logger.ts */
 export class APILogger {
   private recentLogs: any[] = [];
 
+  // capturing Request details
   logRequest(method: string, url: string, headers: Record<string, string>, body?: any) {
     const logEntry = { method, url, headers, body };
     this.recentLogs.push({ type: "Request Details", data: logEntry });
   }
 
+  // capturing Response details
   logResponse(statusCode: number, body?: any) {
     const logEntry = { statusCode, body };
     this.recentLogs.push({ type: "Response Details", data: logEntry });
@@ -967,7 +1056,38 @@ export class APILogger {
 }
 ```
 
-### 3. Verify in test:
+#### 33.2.3 Logger Implementation
+
+```ts
+/* utils/logger.ts */
+export class APILogger {
+  private recentLogs: any[] = [];
+
+  // capturing Request details
+  logRequest(method: string, url: string, headers: Record<string, string>, body?: any) {
+    const logEntry = { method, url, headers, body };
+    this.recentLogs.push({ type: "Request Details", data: logEntry });
+  }
+
+  // capturing Response details
+  logResponse(statusCode: number, body?: any) {
+    const logEntry = { statusCode, body };
+    this.recentLogs.push({ type: "Response Details", data: logEntry });
+  }
+
+  getRecentLogs() {
+    const logs = this.recentLogs
+      .map((log) => {
+        return `\n===${log.type}===\n${JSON.stringify(log.data, null, 2)}\n`;
+      })
+      .join("\n\n");
+    return logs;
+  }
+}
+```
+
+#### 33.2.4 Test Implementation
+
 ```ts
 /* tests/06-TestwithLogger.spec.ts */
 import { expect } from "@playwright/test";
@@ -983,7 +1103,384 @@ test("Test logger", async () => {
 });
 ```
 
-![](../img/section04-lecture033-003.png)
+![Visual help how Logger works](../img/section04-lecture033-003.png)
 
-## 📚 Lecture 0
-## 📚 Lecture 0
+### 🧱 33.3 Pending Fixes (TODO)
+
+```md
+- [ ] Add log rotation/limit to prevent memory issues with long test runs
+- [ ] Add timestamp to each log entry
+- [ ] Implement log levels (debug, info, error)
+- [ ] Add option to export logs to file
+- [ ] Consider adding request/response size limits for logging
+- [ ] Add filtering capabilities to retrieve specific log entries
+```
+
+## 📚 Lecture 034: Status Code Validator
+
+### 🧠 34.1 Context
+
+When status code assertions fail, the default Playwright error messages don't provide enough context about what went wrong. The error messages don't show:
+- Which specific method (`getRequest`, `postRequest`, etc.) failed
+- The exact request that was made
+- The response received
+- The sequence of API calls leading to the failure
+
+This lecture introduces a custom `statusCodeValidator` method that:
+- Replaces the standard `expect().toEqual()` assertions
+- Captures the full API activity log when a status code mismatch occurs
+- Uses `Error.captureStackTrace()` to provide accurate stack traces pointing to the exact method that failed
+- Integrates the logger from Lecture 033 to provide comprehensive error context
+
+This enhancement makes debugging failed tests much easier by providing all the necessary information in one error message.
+
+### ⚙️ 34.2 Updating code according the context
+
+#### 34.2.1 Update Fixture to Include Logger
+```ts
+/* utils/fixtures.ts */
+import { test as base } from "@playwright/test";
+import { RequestHandler } from "./request-handler";
+import { APILogger } from "./logger";  // 👈🏽 ✅
+export type TestOptions = {
+  api: RequestHandler;
+};
+export const test = base.extend<TestOptions>({
+  api: async ({ request }, use) => {
+    const baseUrl = "https://conduit-api.bondaracademy.com/api";
+    const logger = new APILogger();  // 👈🏽 ✅
+    const requestHandler = new RequestHandler(request, baseUrl, logger);  // 👈🏽 ✅
+    await use(requestHandler);
+  },
+});
+```
+
+#### 34.2.2 Update `request-handler.ts` File with Logger Integration
+```ts
+/* utils/request-handler.ts */
+import { APIRequestContext, expect } from "@playwright/test";
+import { APILogger } from "./logger";  // 👈🏽 ✅
+
+export class RequestHandler {
+  private request: APIRequestContext;
+  private logger: APILogger;  // 👈🏽 ✅
+  private baseUrl: string;
+  private defaultBaseUrl: string;
+  private apiPath: string = "";
+  private queryParams: object = {};
+  private apiHeaders: Record<string, string> = {};
+  private apiBody: object = {};
+
+  constructor(request: APIRequestContext, apiBaseUrl: string, logger: APILogger) {  // 👈🏽 ✅
+    this.request = request;
+    this.defaultBaseUrl = apiBaseUrl;
+    this.logger = logger;  // 👈🏽 ✅
+  }
+
+  url(url: string) {
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string) {
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object) {
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: Record<string, string>) {
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object) {
+    this.apiBody = body;
+    return this;
+  }
+
+  async getRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+    // Log the GET request
+    this.logger.logRequest("GET", url, this.apiHeaders, this.apiBody);  // 👈🏽 ✅
+    // Send the request
+    const response = await this.request.get(url, {
+      headers: this.apiHeaders,
+    });
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
+    const responseJSON = await response.json();
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);  // 👈🏽 ✅
+    // Assert the actual status is equal to the expected status
+    expect(actualStatus).toEqual(statusCode);
+    return responseJSON;
+  }
+
+  async postRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+    // Log the POST request
+    this.logger.logRequest("POST", url, this.apiHeaders, this.apiBody);  // 👈🏽 ✅
+    // Send the request
+    const response = await this.request.post(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
+    const responseJSON = await response.json();
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);  // 👈🏽 ✅
+    // Assert the actual status is equal to the expected status
+    expect(actualStatus).toEqual(statusCode);
+    return responseJSON;
+  }
+
+  async putRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+    // Log the PUT request
+    this.logger.logRequest("PUT", url, this.apiHeaders, this.apiBody);  // 👈🏽 ✅
+    // Send the PUT request
+    const response = await this.request.put(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
+    const responseJSON = await response.json();
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);  // 👈🏽 ✅
+    // Assert the actual status is equal to the expected status
+    expect(actualStatus).toEqual(statusCode);
+    return responseJSON;
+  }
+
+  async deleteRequest(statusCode: number) {
+    const url = this.getUrl();
+    // Log the DELETE request
+    this.logger.logRequest("DELETE", url, this.apiHeaders);  // 👈🏽 ✅
+    const response = await this.request.delete(url, {
+      headers: this.apiHeaders,
+    });
+    // Obtain the actual status
+    const actualStatus = response.status();
+    // Log the response
+    this.logger.logResponse(actualStatus);  // 👈🏽 ✅
+    // Assert the actual status is equal to the expected status
+    expect(actualStatus).toEqual(statusCode);
+    return response;
+  }
+
+  private getUrl() {
+    const url = new URL(`${this.baseUrl || this.defaultBaseUrl}${this.apiPath}`);
+    for (const [key, value] of Object.entries(this.queryParams)) {
+      url.searchParams.append(key, value);
+    }
+    //console.log("\n🚀 url: ", url.toString(), "\n");
+    return url.toString();
+  }
+}
+```
+
+#### 34.2.3 Create Custom Status Code Validator
+
+```ts
+/* utils/request-handler.ts */
+// Private method to validate the status code in "expect(actualStatus).toEqual(statusCode);"
+  private statusCodeValidator(actualStatus: number, expectedStatus: number, callingMethod: Function) {
+    if (actualStatus !== expectedStatus) {
+      const logs = this.logger.getRecentLogs();
+      const error = new Error(`Expected status ${expectedStatus} but got ${actualStatus}\n\nRecent API Activity: \n${logs}`);
+      Error.captureStackTrace(error, callingMethod);
+      throw error;
+    }
+  }
+```
+
+#### 34.2.4 Apply `statusCodeValidator` to All Request Methods
+```ts
+/*  */
+import { APIRequestContext, expect } from "@playwright/test";
+import { APILogger } from "./logger";
+
+export class RequestHandler {
+  private request: APIRequestContext;
+  private logger: APILogger;
+  private baseUrl: string;
+  private defaultBaseUrl: string;
+  private apiPath: string = "";
+  private queryParams: object = {};
+  private apiHeaders: Record<string, string> = {};
+  private apiBody: object = {};
+
+  constructor(request: APIRequestContext, apiBaseUrl: string, logger: APILogger) {
+    this.request = request;
+    this.defaultBaseUrl = apiBaseUrl;
+    this.logger = logger;
+  }
+
+  url(url: string) {
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string) {
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object) {
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: Record<string, string>) {
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object) {
+    this.apiBody = body;
+    return this;
+  }
+
+  async getRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+
+    // Log the GET request
+    this.logger.logRequest("GET", url, this.apiHeaders, this.apiBody);
+
+    // Send the request
+    const response = await this.request.get(url, {
+      headers: this.apiHeaders,
+    });
+
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
+    const responseJSON = await response.json();
+
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.getRequest);  // 👈🏽 ✅
+    return responseJSON;
+  }
+
+  async postRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+
+    // Log the POST request
+    this.logger.logRequest("POST", url, this.apiHeaders, this.apiBody);
+
+    // Send the request
+    const response = await this.request.post(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
+    const responseJSON = await response.json();
+
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.postRequest);  // 👈🏽 ✅
+
+    return responseJSON;
+  }
+
+  async putRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+
+    // Log the PUT request
+    this.logger.logRequest("PUT", url, this.apiHeaders, this.apiBody);
+
+    // Send the PUT request
+    const response = await this.request.put(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
+    const responseJSON = await response.json();
+
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.putRequest);  // 👈🏽 ✅
+
+    return responseJSON;
+  }
+
+  async deleteRequest(statusCode: number) {
+    const url = this.getUrl();
+
+    // Log the DELETE request
+    this.logger.logRequest("DELETE", url, this.apiHeaders);
+
+    const response = await this.request.delete(url, {
+      headers: this.apiHeaders,
+    });
+
+    // Obtain the actual status
+    const actualStatus = response.status();
+
+    // Log the response
+    this.logger.logResponse(actualStatus);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.deleteRequest);  // 👈🏽 ✅
+
+    return response;
+  }
+
+  private getUrl() {
+    const url = new URL(`${this.baseUrl || this.defaultBaseUrl}${this.apiPath}`);
+
+    for (const [key, value] of Object.entries(this.queryParams)) {
+      url.searchParams.append(key, value);
+    }
+    //console.log("\n🚀 url: ", url.toString(), "\n");
+    return url.toString();
+  }
+
+  // Private method to validate the status code in "expect(actualStatus).toEqual(statusCode);"
+  private statusCodeValidator(actualStatus: number, expectedStatus: number, callingMethod: Function) {  // 👈🏽 ✅
+    if (actualStatus !== expectedStatus) {
+      const logs = this.logger.getRecentLogs();
+      const error = new Error(`Expected status ${expectedStatus} but got ${actualStatus}\n\nRecent API Activity: \n${logs}`);
+      Error.captureStackTrace(error, callingMethod);
+      throw error;
+    }
+  }
+}
+```
+
+### 🧱 34.3 Pending Fixes (TODO)
+
+```md
+- [ ] Add support for status code ranges (e.g., 2xx, 3xx) instead of exact matches
+- [ ] Consider adding retry logic for specific status codes (e.g., 429 Too Many Requests)
+- [ ] Add option to disable detailed logging for performance-critical tests
+- [ ] Implement error message formatting for better readability
+- [ ] Add support for custom error messages in status code validator
+- [ ] Consider adding validation for response headers in addition to status codes
+```
