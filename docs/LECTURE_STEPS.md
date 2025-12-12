@@ -6,12 +6,13 @@ This project demonstrates the **step-by-step construction of a custom API testin
 
 ### What This Project Does
 
-The framework evolves through six progressive lectures (029-034), starting from basic URL building to a complete HTTP client with:
+The framework evolves through seven progressive lectures (029-035), starting from basic URL building to a complete HTTP client with custom assertions:
 
 - **Fluent API Design**: Chainable methods (`url()`, `path()`, `params()`, `headers()`, `body()`) for intuitive request construction
 - **Full HTTP Support**: GET, POST, PUT, and DELETE methods with automatic status code validation
 - **Custom Logging**: Comprehensive request/response logging for enhanced debugging
 - **Error Handling**: Detailed error messages with full API activity context when tests fail
+- **Custom Assertions**: Extended Playwright expect with custom matchers (`shouldEqual()`, `shouldBeLessThanOrEqual()`) that include API logs
 - **Playwright Integration**: Custom fixtures that seamlessly integrate with Playwright's test framework
 
 ### Technology Stack
@@ -25,6 +26,7 @@ The framework evolves through six progressive lectures (029-034), starting from 
 - **`RequestHandler`**: Core class implementing the fluent API pattern for HTTP requests
 - **`APILogger`**: Custom logging system capturing request/response details
 - **Custom Fixtures**: Playwright fixtures providing `RequestHandler` instances to all tests
+- **Custom Expect Matchers**: Extended assertion matchers with integrated API logging
 - **Test Suite**: Progressive examples demonstrating CRUD operations and best practices
 
 This educational project serves as a practical guide for building maintainable, scalable API testing frameworks from scratch.
@@ -98,6 +100,19 @@ This educational project serves as a practical guide for building maintainable, 
       - [34.2.3 Create Custom Status Code Validator](#3423-create-custom-status-code-validator)
       - [34.2.4 Apply `statusCodeValidator` to All Request Methods](#3424-apply-statuscodevalidator-to-all-request-methods)
     - [🧱 34.3 Pending Fixes (TODO)](#-343-pending-fixes-todo)
+  - [📚 Lecture 035: Assertions Enhancement](#-lecture-035-assertions-enhancement)
+    - [🧠 35.1 Context](#-351-context)
+    - [⚙️ 35.2 Updating code according the context:](#️-352-updating-code-according-the-context)
+      - [35.2.1 Create `custom-expect.ts` file:](#3521-create-custom-expectts-file)
+      - [35.2.2 Call the `setCustomExpectLogger` method in `utils/fixtures.ts`file:](#3522-call-the-setcustomexpectlogger-method-in-utilsfixturestsfile)
+      - [35.2.3 Redefine `toEqual()` method to `shouldEqual()`:](#3523-redefine-toequal-method-to-shouldequal)
+      - [35.2.4 Adding the missing logs](#3524-adding-the-missing-logs)
+      - [35.2.5 Running negative scenario](#3525-running-negative-scenario)
+      - [35.2.6 Adding new logic inside `try` block](#3526-adding-new-logic-inside-try-block)
+      - [35.2.6 Fixing the `shouldEqual()` method issue related to recognize as valid method](#3526-fixing-the-shouldequal-method-issue-related-to-recognize-as-valid-method)
+      - [35.2.7 Create the `shouldBeLessThanOrEqual()` method](#3527-create-the-shouldbelessthanorequal-method)
+      - [35.2.8 Create the `shouldBeLessThanOrEqual()` method](#3528-create-the-shouldbelessthanorequal-method)
+    - [🧱 35.3 Pending Fixes (TODO)](#-353-pending-fixes-todo)
 
 
 ## 📚 Visual Project Tree
@@ -119,11 +134,16 @@ PW-API-TESTING/
 │   ├── 📄 01-example.spec.ts                  # Basic API test examples (GET, POST, PUT, DELETE)
 │   ├── 📄 02-hooks.spec.ts                    # Tests demonstrating beforeAll/afterAll hooks
 │   ├── 📄 03-smokeTest.spec.ts                # Smoke tests for API endpoints
-│   └── 📄 04-smokeTestWithFixture.spec.ts     # Tests using custom fixtures
+│   ├── 📄 04-smokeTestWithFixture.spec.ts     # Tests using custom fixtures
+│   ├── 📄 05-smokeTestFixturePostPutDeleteRequests.spec.ts  # CRUD operations tests
+│   ├── 📄 06-TestwithLogger.spec.ts           # Tests demonstrating logger functionality
+│   └── 📄 07-TestwithExpectLogger.spec.ts     # Tests using custom expect matchers
 │
 ├── 📁 utils/                                  # Utility modules
 │   ├── 📄 fixtures.ts                         # Playwright custom fixtures definition
-│   └── 📄 request-handler.ts                  # RequestHandler class for API request building
+│   ├── 📄 request-handler.ts                  # RequestHandler class for API request building
+│   ├── 📄 logger.ts                           # APILogger class for request/response logging
+│   └── 📄 custom-expect.ts                    # Custom expect matchers with logger integration
 │
 ├── 📄 .gitignore                              # Git ignore rules
 ├── 📄 package.json                            # Node.js project configuration
@@ -185,14 +205,31 @@ This is a **Playwright API Testing** project designed to test REST API endpoints
 2. **`request-handler.ts`**: API request builder class
    - Fluent API for building HTTP requests
    - Methods: `url()`, `path()`, `params()`, `headers()`, `body()`
+   - HTTP methods: `getRequest()`, `postRequest()`, `putRequest()`, `deleteRequest()`
    - Default base URL: `https://conduit-api.bondaracademy.com/api`
    - Private `getUrl()` method for URL construction
+   - Integrated with `APILogger` for request/response logging
+   - Custom status code validation with detailed error messages
+
+3. **`logger.ts`**: API logging system
+   - Captures request details (method, URL, headers, body)
+   - Captures response details (status code, body)
+   - Provides `getRecentLogs()` method to retrieve API activity history
+   - Used for debugging failed tests
+
+4. **`custom-expect.ts`**: Custom assertion matchers
+   - Extends Playwright's `expect` with custom matchers
+   - `shouldEqual()`: Custom equality matcher with API logs
+   - `shouldBeLessThanOrEqual()`: Custom comparison matcher with API logs
+   - Automatically includes API activity logs in error messages
+   - Supports both positive and negative assertions
 
 #### 📁 Documentation (`docs/`)
 - **`LECTURE_STEPS.md`**: Educational content
   - Section 04: Building a Framework
-  - Lecture 029: URL Builder
-  - Examples and explanations of URL building logic
+  - Lectures 029-035: Progressive framework development
+  - Examples and explanations of each component
+  - Complete code examples and test implementations
 
 ### API Endpoints Tested
 The project tests the **Conduit API** (`https://conduit-api.bondaracademy.com/api`):
@@ -1484,3 +1521,472 @@ export class RequestHandler {
 - [ ] Add support for custom error messages in status code validator
 - [ ] Consider adding validation for response headers in addition to status codes
 ```
+
+## 📚 Lecture 035: Assertions Enhancement
+
+### 🧠 35.1 Context
+
+When writing API tests, assertion failures often occur without sufficient context about what API calls were made leading up to the failure. The standard Playwright `expect()` assertions don't automatically include API activity logs, making it difficult to debug test failures.
+
+This lecture introduces custom assertion matchers that integrate with the `APILogger` to provide comprehensive debugging information when assertions fail. The custom matchers (`shouldEqual()` and `shouldBeLessThanOrEqual()`) automatically include recent API activity logs in error messages, making it much easier to understand why a test failed.
+
+The implementation uses Playwright's `expect.extend()` API to create custom matchers that:
+- Wrap standard Playwright assertions
+- Capture API logs when assertions fail
+- Provide detailed error messages with full API context
+- Support both positive and negative assertions (`expect().not.shouldEqual()`)
+- Include proper TypeScript type definitions for IDE autocomplete support
+
+
+### ⚙️ 35.2 Updating code according the context:
+
+#### 35.2.1 Create `custom-expect.ts` file:
+
+using this docs a base: [Add custom matchers using expect.extend](https://playwright.dev/docs/test-assertions#add-custom-matchers-using-expectextend)
+
+```tsx
+/* utils/custom-expect.ts */
+import { expect as baseExpect } from "@playwright/test";
+import { APILogger } from "./logger";
+
+let apiLogger: APILogger;
+
+export const setCustomExpectLogger = (logger: APILogger) => {
+  apiLogger = logger;
+};
+
+export const expect = baseExpect.extend({
+  // ....
+});
+```
+
+#### 35.2.2 Call the `setCustomExpectLogger` method in `utils/fixtures.ts`file:
+```tsx
+/* utils/fixtures.ts */
+import { test as base } from "@playwright/test";
+import { RequestHandler } from "./request-handler";
+import { APILogger } from "./logger";
+import { setCustomExpectLogger } from "./custom-expect";  // 👈🏽 ✅
+
+export type TestOptions = {
+  api: RequestHandler;
+};
+
+export const test = base.extend<TestOptions>({
+  api: async ({ request }, use) => {
+    const baseUrl = "https://conduit-api.bondaracademy.com/api";
+    const logger = new APILogger();
+    setCustomExpectLogger(logger);  // 👈🏽 ✅
+    const requestHandler = new RequestHandler(request, baseUrl, logger);
+    await use(requestHandler);
+  },
+});
+```
+
+
+#### 35.2.3 Redefine `toEqual()` method to `shouldEqual()`:
+```tsx
+/* utils/fixtures.ts */
+import { expect as baseExpect } from "@playwright/test";
+import { APILogger } from "./logger";
+
+let apiLogger: APILogger;
+
+export const setCustomExpectLogger = (logger: APILogger) => {
+  apiLogger = logger;
+};
+
+export const expect = baseExpect.extend({
+  shouldEqual(received: any, expected: any) {  // 👈🏽 ✅
+    let pass: boolean;
+    let logs: string = "";
+    try {
+      baseExpect(received).toEqual(expected);
+      pass = true;
+    } catch (e: any) {
+      pass = false;
+      logs = apiLogger.getRecentLogs();
+    }
+
+    const hint = this.isNot ? "not" : "";
+    const message =
+      this.utils.matcherHint("shouldEqual", undefined, undefined, { isNot: this.isNot }) +
+      "\n\n" +
+      `Expected: ${hint} ${this.utils.printExpected(expected)}\n` +
+      `Received: ${this.utils.printReceived(received)}\n`;
+
+    return {
+      message: () => message,
+      pass,
+    };
+  },
+});
+```
+
+> Verify whether this .shouldEqual method works in a new test spec:
+```ts
+/* tests/07-TestwithExpectLogger.spec.ts */
+test("Second Test - GET Articles", async ({ api }) => {
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).toBeLessThanOrEqual(10);
+  expect(response.articlesCount).shouldEqual(10);
+});
+```
+
+![Terminal result/outcome](../img/sectio04-lecture035-001.png)
+
+> Test the negative test case:
+```ts
+/* tests/07-TestwithExpectLogger.spec.ts */
+test("Second Test - GET Articles", async ({ api }) => {
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).toBeLessThanOrEqual(10);
+  expect(response.articlesCount).shouldEqual(9);  // 👈🏽 ✅
+});
+```
+
+![Missing the logs](../img/section04-lecture035-002.png)
+
+#### 35.2.4 Adding the missing logs
+
+> Adding the missing logs:
+```ts
+/* utils/custom-expect.ts */
+import { expect as baseExpect } from "@playwright/test";
+import { APILogger } from "./logger";
+
+let apiLogger: APILogger;
+
+export const setCustomExpectLogger = (logger: APILogger) => {
+  apiLogger = logger;
+};
+
+export const expect = baseExpect.extend({
+  shouldEqual(received: any, expected: any) {
+    let pass: boolean;
+    let logs: string = "";
+    try {
+      baseExpect(received).toEqual(expected);
+      pass = true;
+    } catch (e: any) {
+      pass = false;
+      logs = apiLogger.getRecentLogs();
+    }
+
+    const hint = this.isNot ? "not" : "";
+    const message =
+      this.utils.matcherHint("shouldEqual", undefined, undefined, { isNot: this.isNot }) +
+      "\n\n" +
+      `Expected: ${hint} ${this.utils.printExpected(expected)}\n` +
+      `Received: ${this.utils.printReceived(received)}\n` +
+      `Recent API Activity: \n${logs}`;  // 👈🏽 ✅
+
+    return {
+      message: () => message,
+      pass,
+    };
+  },
+});
+```
+
+![Re-test with logs](../img/section04-lecture035-003.png)
+
+#### 35.2.5 Running negative scenario
+```tsx
+/* tests/07-TestwithExpectLogger.spec.ts */
+import { expect } from "@playwright/test";
+import { test } from "../utils/fixtures";
+import { APILogger } from "../utils/logger";
+
+test.only("Second Test - GET Articles", async ({ api }) => {
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).toBeLessThanOrEqual(10);
+  expect(response.articlesCount).not.shouldEqual(10);
+});
+```
+
+![no logs appear](../img/section04-lecture035-004.png)
+
+**Expected Result:** missing logs
+
+According to the test `tests/07-TestwithExpectLogger.spec.ts`:
+- `baseExpect(received).toEqual(expected)` is True
+- `pass = True`
+- `logs = apiLogger.getRecentLogs();` is never called!
+- `{this.isNot}` is true then flip to false.
+- Test failed
+
+> Need to add some additional logic inside `try` block.
+
+#### 35.2.6 Adding new logic inside `try` block
+```ts
+/* utils/custom-expect.ts */
+import { expect as baseExpect } from "@playwright/test";
+import { APILogger } from "./logger";
+
+let apiLogger: APILogger;
+
+export const setCustomExpectLogger = (logger: APILogger) => {
+  apiLogger = logger;
+};
+
+export const expect = baseExpect.extend({
+  shouldEqual(received: any, expected: any) {
+    let pass: boolean;
+    let logs: string = "";
+    try {
+      baseExpect(received).toEqual(expected);
+      pass = true;
+      if(this.isNot) logs = apiLogger.getRecentLogs();  // 👈🏽 ✅
+    } catch (e: any) {
+      pass = false;
+      logs = apiLogger.getRecentLogs();
+    }
+
+    const hint = this.isNot ? "not" : "";
+    const message =
+      this.utils.matcherHint("shouldEqual", undefined, undefined, { isNot: this.isNot }) +
+      "\n\n" +
+      `Expected: ${hint} ${this.utils.printExpected(expected)}\n` +
+      `Received: ${this.utils.printReceived(received)}\n` +
+      `Recent API Activity: \n${logs}`;
+
+    return {
+      message: () => message,
+      pass,
+    };
+  },
+});
+
+```
+![no logs appear](../img/section04-lecture035-005.png)
+
+#### 35.2.6 Fixing the `shouldEqual()` method issue related to recognize as valid method
+
+The `shouldEqual()` method needs to be properly declared in TypeScript's global namespace so that TypeScript recognizes it as a valid matcher method. This enables IDE autocomplete and type checking.
+
+![shouldEqual() method issue as no valid](../img/section04-lecture035-006.png)
+
+```ts
+/* utils/custom-expect.ts */
+import { expect as baseExpect } from "@playwright/test";
+import { APILogger } from "./logger";
+
+let apiLogger: APILogger;
+
+export const setCustomExpectLogger = (logger: APILogger) => {
+  apiLogger = logger;
+};
+
+declare global {  // 👈🏽 ✅ (1)
+  namespace PlaywrightTest {
+    interface Matchers<R, T> {
+      shouldEqual(expcted: T): R;  // 👈🏽 ✅ (2)
+    }
+  }
+}  // 👈🏽 ✅ (1)
+
+export const expect = baseExpect.extend({
+  shouldEqual(received: any, expected: any) {
+    let pass: boolean;
+    let logs: string = "";
+    try {
+      baseExpect(received).toEqual(expected);
+      pass = true;
+      if (this.isNot) logs = apiLogger.getRecentLogs();
+    } catch (e: any) {
+      pass = false;
+      logs = apiLogger.getRecentLogs();
+    }
+
+    const hint = this.isNot ? "not" : "";
+    const message =
+      this.utils.matcherHint("shouldEqual", undefined, undefined, { isNot: this.isNot }) +
+      "\n\n" +
+      `Expected: ${hint} ${this.utils.printExpected(expected)}\n` +
+      `Received: ${this.utils.printReceived(received)}\n` +
+      `Recent API Activity: \n${logs}`;
+
+    return {
+      message: () => message,
+      pass,
+    };
+  },
+});
+```
+
+**Expected Result:**
+
+![shouldEqual() method is NOW valid](../img/section04-lecture035-007.png)
+
+#### 35.2.7 Create the `shouldBeLessThanOrEqual()` method
+
+The `shouldEqual()` method needs to be properly declared in TypeScript's global namespace so that TypeScript recognizes it as a valid matcher method. This enables IDE autocomplete and type checking.
+
+```ts
+/* utils/custom-expect.ts */
+import { expect as baseExpect } from "@playwright/test";
+import { APILogger } from "./logger";
+
+let apiLogger: APILogger;
+
+export const setCustomExpectLogger = (logger: APILogger) => {
+  apiLogger = logger;
+};
+
+declare global {  // 👈🏽 ✅ (1)
+  namespace PlaywrightTest {
+    interface Matchers<R, T> {
+      shouldEqual(expcted: T): R;  // 👈🏽 ✅ (2)
+    }
+  }
+}  // 👈🏽 ✅ (1)
+
+export const expect = baseExpect.extend({
+  shouldEqual(received: any, expected: any) {
+    let pass: boolean;
+    let logs: string = "";
+    try {
+      baseExpect(received).toEqual(expected);
+      pass = true;
+      if (this.isNot) logs = apiLogger.getRecentLogs();
+    } catch (e: any) {
+      pass = false;
+      logs = apiLogger.getRecentLogs();
+    }
+
+    const hint = this.isNot ? "not" : "";
+    const message =
+      this.utils.matcherHint("shouldEqual", undefined, undefined, { isNot: this.isNot }) +
+      "\n\n" +
+      `Expected: ${hint} ${this.utils.printExpected(expected)}\n` +
+      `Received: ${this.utils.printReceived(received)}\n` +
+      `Recent API Activity: \n${logs}`;
+
+    return {
+      message: () => message,
+      pass,
+    };
+  },
+});
+```
+
+**Expected Result:**
+
+![shouldEqual() method is NOW valid](../img/section04-lecture035-007.png)
+
+#### 35.2.8 Create the `shouldBeLessThanOrEqual()` method
+
+Following the same pattern as `shouldEqual()`, we create a custom matcher for `shouldBeLessThanOrEqual()` that also includes API logs in error messages.
+
+```ts
+/* utils/custom-expect.ts */
+import { expect as baseExpect } from "@playwright/test";
+import { APILogger } from "./logger";
+
+let apiLogger: APILogger;
+
+export const setCustomExpectLogger = (logger: APILogger) => {
+  apiLogger = logger;
+};
+
+declare global {
+  namespace PlaywrightTest {
+    interface Matchers<R, T> {
+      shouldEqual(expcted: T): R;
+      shouldBeLessThanOrEqual(expcted: T): R;  // 👈🏽 ✅ (1)
+    }
+  }
+}
+
+export const expect = baseExpect.extend({
+  shouldEqual(received: any, expected: any) {
+    let pass: boolean;
+    let logs: string = "";
+    try {
+      baseExpect(received).toEqual(expected);
+      pass = true;
+      if (this.isNot) logs = apiLogger.getRecentLogs();
+    } catch (e: any) {
+      pass = false;
+      logs = apiLogger.getRecentLogs();
+    }
+
+    const hint = this.isNot ? "not" : "";
+    const message =
+      this.utils.matcherHint("shouldEqual", undefined, undefined, { isNot: this.isNot }) +
+      "\n\n" +
+      `Expected: ${hint} ${this.utils.printExpected(expected)}\n` +
+      `Received: ${this.utils.printReceived(received)}\n` +
+      `Recent API Activity: \n${logs}`;
+
+    return {
+      message: () => message,
+      pass,
+    };
+  },
+  shouldBeLessThanOrEqual(received: any, expected: any) {  // 👈🏽 ✅ (2)
+    let pass: boolean;
+    let logs: string = "";
+    try {
+      baseExpect(received).toBeLessThanOrEqual(expected);  // 👈🏽 ✅ (3)
+      pass = true;
+      if (this.isNot) logs = apiLogger.getRecentLogs();  // 👈🏽 ✅ (4)
+    } catch (e: any) {
+      pass = false;
+      logs = apiLogger.getRecentLogs();
+    }
+
+    const hint = this.isNot ? "not" : "";
+    const message =
+      this.utils.matcherHint("shouldBeLessThanOrEqual", undefined, undefined, { isNot: this.isNot }) +
+      "\n\n" +
+      `Expected: ${hint} ${this.utils.printExpected(expected)}\n` +
+      `Received: ${this.utils.printReceived(received)}\n` +
+      `Recent API Activity: \n${logs}`;  // 👈🏽 ✅ (5)
+
+    return {
+      message: () => message,
+      pass,
+    };
+  },
+});
+```
+
+**Test Implementation:**
+
+```ts
+/* tests/07-TestwithExpectLogger.spec.ts */
+import { expect } from "../utils/custom-expect";
+import { test } from "../utils/fixtures";
+
+test("Second Test - GET Articles", async ({ api }) => {
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).shouldBeLessThanOrEqual(10);  // 👈🏽 ✅ (1)
+  expect(response.articlesCount).shouldEqual(10);
+});
+```
+
+**Expected Result:**
+
+```bash
+✓  1 [chromium] › tests/07-TestwithExpectLogger.spec.ts:16:5 › Second Test - GET Articles (1.2s)
+
+1 passed (1.8s)
+```
+
+### 🧱 35.3 Pending Fixes (TODO)
+
+```md
+- [ ] Add more custom matchers (shouldContain, shouldBeGreaterThan, etc.)
+- [ ] Add option to configure which matchers include API logs
+- [ ] Consider adding request/response timing information to logs
+- [ ] Add support for custom log formatting in error messages
+- [ ] Implement log filtering to show only relevant API calls (e.g., last N requests)
+- [ ] Add TypeScript type safety improvements for matcher parameters
+- [ ] Consider adding matcher chaining support
+- [ ] Add unit tests for custom matchers
+```
+
+
+

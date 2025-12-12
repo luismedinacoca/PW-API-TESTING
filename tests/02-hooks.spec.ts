@@ -17,12 +17,11 @@ test.beforeAll("runs before all", async ({ request }) => {
   // Save token value:
   authToken = "Token " + tokenResponseJSON.user.token;
   console.log("\n  3️⃣   authToken: ", authToken);
+});
 
-})
-
-test.afterAll("runs after all", async ({ }) => {
+test.afterAll("runs after all", async ({}) => {
   console.log("\n\n\n🚪 ************* This is executed after all tests *************");
-})
+});
 
 test("GET Test tags", async ({ request }) => {
   const tagResponse = await request.get("https://conduit-api.bondaracademy.com/api/tags");
@@ -82,7 +81,7 @@ test("GET all Articles", async ({ request }) => {
   expect(articlesResponseJSON.articlesCount).toBe(10);
 
   console.log("\n👉🏽 expect(articlesResponseJSON.articles[9].favoritesCount).toBe(65)");
-  expect(articlesResponseJSON.articles[9].favoritesCount).toBe(66);
+  expect(articlesResponseJSON.articles[9].favoritesCount).toBe(65);
   console.log("\n ✅ PASSED ✅");
 });
 
@@ -284,7 +283,7 @@ test("POST, PATCH and DELETE an Article", async ({ request }) => {
     },
   });
 
-  console.log("\n ❶   newModifiedArticleResponse: ", newModifiedArticleResponse)
+  console.log("\n ❶   newModifiedArticleResponse: ", newModifiedArticleResponse);
 
   expect(newModifiedArticleResponse.status()).toEqual(200);
   console.log("\n ❸   expect(newModifiedArticleResponse.status()).toEqual(200)");
@@ -297,11 +296,14 @@ test("POST, PATCH and DELETE an Article", async ({ request }) => {
 
   console.log("\n\n\n🚀  ************* GET REQUEST *************");
   //Verify this new Article was added - GET Request
-  const articlesModifiedResponse = await request.get("https://conduit-api.bondaracademy.com/api/articles?limit=10&offset=0", {
-    headers: {
-      Authorization: authToken,
-    },
-  });
+  const articlesModifiedResponse = await request.get(
+    "https://conduit-api.bondaracademy.com/api/articles?limit=10&offset=0",
+    {
+      headers: {
+        Authorization: authToken,
+      },
+    }
+  );
 
   /* Headers Assertions: */
   console.log("\n 8️⃣  articlesModifiedResponse.status(): ", articlesModifiedResponse.status());
