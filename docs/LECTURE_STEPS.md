@@ -1,58 +1,9 @@
-# 👨🏾‍💻 Section 04: Building a Framework
+x# 👨🏾‍💻 Section 04: Building a Framework
 
-## 📋 Project Overview
-
-This project demonstrates the **step-by-step construction of a custom API testing framework** using Playwright and TypeScript. The framework provides a fluent, chainable API for building HTTP requests, making API testing more readable, maintainable, and efficient.
-
-### What This Project Does
-
-The framework evolves through seven progressive lectures (029-035), starting from basic URL building to a complete HTTP client with custom assertions:
-
-- **Fluent API Design**: Chainable methods (`url()`, `path()`, `params()`, `headers()`, `body()`) for intuitive request construction
-- **Full HTTP Support**: GET, POST, PUT, and DELETE methods with automatic status code validation
-- **Custom Logging**: Comprehensive request/response logging for enhanced debugging
-- **Error Handling**: Detailed error messages with full API activity context when tests fail
-- **Custom Assertions**: Extended Playwright expect with custom matchers (`shouldEqual()`, `shouldBeLessThanOrEqual()`) that include API logs
-- **Playwright Integration**: Custom fixtures that seamlessly integrate with Playwright's test framework
-
-### Technology Stack
-
-- **Testing Framework**: Playwright Test (`@playwright/test`)
-- **Language**: TypeScript
-- **Target API**: Conduit API (`https://conduit-api.bondaracademy.com/api`)
-
-### Key Components
-
-- **`RequestHandler`**: Core class implementing the fluent API pattern for HTTP requests
-- **`APILogger`**: Custom logging system capturing request/response details
-- **Custom Fixtures**: Playwright fixtures providing `RequestHandler` instances to all tests
-- **Custom Expect Matchers**: Extended assertion matchers with integrated API logging
-- **Test Suite**: Progressive examples demonstrating CRUD operations and best practices
-
-This educational project serves as a practical guide for building maintainable, scalable API testing frameworks from scratch.
 
 ## 📑 Table of Contents
 
-- [👨🏾‍💻 Section 04: Building a Framework](#-section-04-building-a-framework)
-  - [📋 Project Overview](#-project-overview)
-    - [What This Project Does](#what-this-project-does)
-    - [Technology Stack](#technology-stack)
-    - [Key Components](#key-components)
-  - [📑 Table of Contents](#-table-of-contents)
-  - [📚 Visual Project Tree](#-visual-project-tree)
-  - [📚 Project Overview](#-project-overview-1)
-    - [Purpose](#purpose)
-    - [Technology Stack](#technology-stack-1)
-    - [Key Components](#key-components-1)
-      - [📁 Configuration Files](#-configuration-files)
-      - [📁 Test Files (`tests/`)](#-test-files-tests)
-      - [📁 Utility Modules (`utils/`)](#-utility-modules-utils)
-      - [📁 Documentation (`docs/`)](#-documentation-docs)
-    - [API Endpoints Tested](#api-endpoints-tested)
-    - [Test Execution](#test-execution)
-    - [Generated Directories](#generated-directories)
-    - [Git Status](#git-status)
-- [🧳 Section 04: Building a Framework](#-section-04-building-a-framework-1)
+- [🧳 Section 04: Building a Framework](#-section-04-building-a-framework)
   - [📚 Lecture 029: URL Builder](#-lecture-029-url-builder)
     - [🧠 29.1 Context](#-291-context)
     - [⚙️ 29.2 Updating code according the context](#️-292-updating-code-according-the-context)
@@ -1988,5 +1939,265 @@ test("Second Test - GET Articles", async ({ api }) => {
 - [ ] Add unit tests for custom matchers
 ```
 
+## 📚 Lecture 036: *API Configuration File*
 
+### 🧠 36.1 Context
+
+As testing frameworks grow in complexity, managing configuration values becomes critical. Hardcoding values like API URLs, user credentials, and environment-specific settings directly in test files creates several problems:
+
+- **Maintainability**: When URLs or credentials change, you must update multiple files
+- **Security**: Credentials exposed in source code pose security risks
+- **Flexibility**: Running tests against different environments (dev, qa, staging, production) requires code changes
+- **Consistency**: Different tests might use different values, leading to inconsistent behavior
+
+This lecture introduces a centralized configuration file (`api-test.config.ts`) that:
+- Centralizes all API-related configuration in one place
+- Supports environment-based configuration through environment variables
+- Provides a Playwright fixture to inject configuration into tests
+- Enables easy switching between environments without code changes
+
+**When it's used:**
+- When you need to test against multiple environments (dev, qa, staging, production)
+- When credentials or API URLs need to be changed frequently
+- When you want to avoid hardcoding sensitive information in test files
+- When you need consistent configuration across all tests
+
+**Examples from the project:**
+- The `api-test.config.ts` file stores the base API URL and user credentials
+- Environment variables (`TEST_ENV`) control which credentials are used
+- The `config` fixture makes configuration available to all tests
+- Tests use `config.userEmail` and `config.userPassword` instead of hardcoded values
+
+**Advantages:**
+- Single source of truth for configuration
+- Easy environment switching via environment variables
+- Better security (can use environment variables for sensitive data)
+- Improved maintainability (change once, affects all tests)
+- Type-safe configuration through TypeScript
+
+**Disadvantages:**
+- Requires understanding of environment variables
+- Configuration file must be kept in sync with actual environments
+- Risk of using wrong environment if `TEST_ENV` is not set correctly
+- May need additional tooling for secret management in production
+
+**When to consider alternatives:**
+- For very simple projects with a single environment, hardcoding might be acceptable
+- For production secrets, consider using secret management services (AWS Secrets Manager, Azure Key Vault)
+- For complex multi-tenant scenarios, consider a configuration service or database
+- For CI/CD pipelines, environment variables are often preferred over config files
+
+**Connection to practical implementation:**
+The configuration file integrates seamlessly with the existing framework:
+- The `RequestHandler` uses `config.apiUrl` from the fixture
+- Tests access credentials via the `config` fixture parameter
+- Environment detection happens at module load time, before tests run
+- The fixture pattern ensures consistent configuration access across all tests
+
+### ⚙️ 36.2 Updating code according the context:
+
+#### 36.2.1 create `api-test.config.ts` file:
+```ts
+/* api-test.config.ts */
+const config = {
+  apiUrl: "https://conduit-api.bondaracademy.com/api",
+  userEmail: "suspiros@test.com",
+  userPassword: "Test!001",
+};
+
+export { config };
+``` 
+
+#### 36.2.2 Import `api-test.config.ts` into `fixture.ts` and then create the fixture for config file:
+```ts
+/* utils/fixtures.ts */
+import { test as base } from "@playwright/test";
+import { RequestHandler } from "./request-handler";
+import { APILogger } from "./logger";
+import { setCustomExpectLogger } from "./custom-expect";
+import { config } from "../api-test.config";  // 👈🏽 ✅
+
+export type TestOptions = {
+  api: RequestHandler;
+  config: typeof config;  // 👈🏽 ✅
+};
+
+export const test = base.extend<TestOptions>({
+  api: async ({ request }, use) => {
+    //const baseUrl = "https://conduit-api.bondaracademy.com/api";
+    const logger = new APILogger();
+    setCustomExpectLogger(logger);
+    const requestHandler = new RequestHandler(request, config.apiUrl, logger);
+    await use(requestHandler);
+  },
+  config: async ({}, use) => {  // 👈🏽 ✅
+    await use(config);  // 👈🏽 ✅
+  },
+});
+``` 
+
+#### 36.2.3 Apply this new Fixture with Config in a test:
+```ts
+/*  */
+import { expect } from "../utils/custom-expect";
+import { test } from "../utils/fixtures";
+
+let authToken: string;
+test.beforeAll("runs before all", async ({ api, config }) => {  // 👈🏽 ✅
+  console.log("\n\n\n🚀 LOGIN");
+  const tokenResponse = await api
+    .path("/users/login")
+    .body({ user: { email: config.userEmail, password: config.userPassword } })  // 👈🏽 ✅
+    .postRequest(200);
+
+  authToken = "Token " + tokenResponse.user.token;
+  console.log("\n 🔐 authToken: ", authToken);
+});
+
+test("Second Test - GET Articles", async ({ api }) => {
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).shouldBeLessThanOrEqual(10);
+  expect(response.articlesCount).shouldEqual(10);
+});
+``` 
+
+#### 36.2.4 Update `config` according the environment:
+```ts
+/* api-test.config.ts */
+const processENV = process.env.TEST_ENV;        // 👈🏽 ✅
+const env = processENV || "prod";                // 👈🏽 ✅ (Note: Consider using "qa" as default for safety)
+console.log("🚀 Test environment is: " + env);  // 👈🏽 ✅
+
+const config = {
+  apiUrl: "https://conduit-api.bondaracademy.com/api",
+  userEmail: "suspiros@test.com",
+  userPassword: "Test!001",
+};
+
+// 👈🏽 ✅
+if (env === "qa") {
+  config.userEmail = "suspiros.qa@example.io";
+  config.userPassword = "Test!001";
+} else if (env === "stg") {
+  config.userEmail = "suspiros.stg@example.io";
+  config.userPassword = "Test!001";
+} else if (env === "prod") {
+  config.userEmail = "pierotester@test.com";
+  config.userPassword = "12345678";
+} else if (env === "dev") {
+  config.userEmail = "suspiros.dev@example.io";
+  config.userPassword = "Test!001";
+} else {
+  config.userEmail = "suspiros@test.com";
+  config.userPassword = "Test!001";
+}
+// 👈🏽 ✅
+
+export { config };
+```
+
+#### 36.2.5 Verify running a test:
+```ts
+/* tests/08-TestWithConfig.spec.ts */
+import { expect } from "../utils/custom-expect";
+import { test } from "../utils/fixtures";
+
+let authToken: string;
+test.beforeAll("runs before all", async ({ api, config }) => {
+  console.log("\n\n\n🚀 LOGIN");
+  const tokenResponse = await api
+    .path("/users/login")
+    .body({ user: { email: config.userEmail, password: config.userPassword } })
+    .postRequest(200);
+
+  authToken = "Token " + tokenResponse.user.token;
+  console.log("\n 🔐 authToken: ", authToken);
+
+  console.log("� tokenResponse.user: ", tokenResponse.user);
+});
+
+test("Second Test - GET Articles", async ({ api }) => {
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).shouldBeLessThanOrEqual(10);
+  expect(response.articlesCount).shouldEqual(10);
+});
+```
+![Verifying the environment and credentials in Test](../img/section04-lecture036-001.png)
+
+#### 36.2.6 Running a test from terminal and setting up an Environment:
+```bash
+TEST_ENV=dev npx playwright test [test_relative_path]
+```
+
+in Windows Operating System:
+```bash
+set TEST_ENV=stg && npx playwright test [test_relative_path]
+set TEST_ENV=prod && npx playwright test [test_relative_path]
+```
+
+### 🐞 36.3 Issues:
+
+| Issue | Status | Log/Error |
+|---|---|---|
+| **Default environment mismatch**: The `api-test.config.ts` file defaults to `"prod"` when `TEST_ENV` is not set, but the documentation shows `"qa"` as the default. This inconsistency could lead to accidentally running tests against production. | ⚠️ Identified | File: `api-test.config.ts` line 2. Current: `const env = processENV || "prod";` Expected: `const env = processENV || "qa";` |
+| **No environment validation**: The configuration file doesn't validate that the provided environment is one of the supported values (qa, stg, prod, dev). Invalid environments silently fall back to default credentials. | ⚠️ Identified | File: `api-test.config.ts`. No validation for `env` variable before using it in if-else chain. |
+| **Hardcoded API URL**: The `apiUrl` is hardcoded and doesn't change based on environment. Different environments might require different API URLs. | ⚠️ Identified | File: `api-test.config.ts` line 6. `apiUrl` is static regardless of environment. |
+| **Credentials in source code**: User credentials are stored directly in the configuration file, which poses security risks if the repository is public or accessed by unauthorized users. | ⚠️ Identified | File: `api-test.config.ts` lines 11-26. Credentials are visible in source code. |
+| **No TypeScript type definition**: The `config` object doesn't have explicit TypeScript types, making it harder to catch errors at compile time and reducing IDE autocomplete support. | ℹ️ Low Priority | File: `api-test.config.ts`. No interface or type definition for the config object structure. |
+| **Missing error handling**: If an invalid environment is provided, the code silently uses default credentials without warning the user. | ⚠️ Identified | File: `api-test.config.ts`. No error handling or warnings for invalid environments. |
+
+### 🧱 36.4 Pending Fixes (TODO)
+
+```md
+- [ ] Fix default environment in `api-test.config.ts` to use `"qa"` instead of `"prod"` to prevent accidental production testing
+- [ ] Add environment validation to ensure only supported environments (qa, stg, prod, dev) are used, throw error for invalid values
+- [ ] Implement environment-based API URL configuration to support different API endpoints per environment
+- [ ] Move sensitive credentials to environment variables instead of hardcoding them in the config file
+- [ ] Create TypeScript interface for config object to improve type safety and IDE support
+- [ ] Add warning/error logging when invalid environment is detected or when falling back to default credentials
+- [ ] Consider adding a `.env.example` file to document required environment variables
+- [ ] Add JSDoc comments to the config file explaining how to use environment variables
+- [ ] Implement config validation function to ensure all required fields are present before tests run
+- [ ] Consider adding support for config file overrides (e.g., `api-test.config.local.ts`) for local development
+```
+
+
+
+---
+
+🔥 🔥 🔥 
+
+## 📚 Lecture YYY: *{{TITLE_NAME}}*
+
+### 🧠 XX.1 Context
+
+
+### ⚙️ XX.2 Updating code according the context:
+
+#### XX.2.1
+```ts
+/*  */
+
+``` 
+
+
+#### XX.2.2
+```ts
+/*  */
+
+``` 
+
+
+#### XX.2.3
+```ts
+/*  */
+
+``` 
+
+
+### 🧱 XX.3 Pending Fixes (TODO)
+
+```md
+- [ ] 
+```
 
