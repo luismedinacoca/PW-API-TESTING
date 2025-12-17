@@ -2162,6 +2162,418 @@ set TEST_ENV=prod && npx playwright test [test_relative_path]
 ```
 
 
+## 📚 Lecture 037: *Request Handler Improvement*
+
+### 🧠 37.1 Context
+
+The `RequestHandler` class uses a fluent API pattern where methods like `path()`, `params()`, `headers()`, and `body()` set internal state that persists until a request method (`getRequest()`, `postRequest()`, etc.) is called. However, this stateful design creates a critical problem: **state persists between requests**, causing unintended side effects when making multiple API calls in sequence.
+
+**When it occurs:**
+- When making multiple requests in the same test without explicitly resetting state
+- When chaining multiple API calls where each should be independent
+- When the same `RequestHandler` instance is reused across different test scenarios
+- When query parameters, headers, or body from one request leak into subsequent requests
+
+**Examples from the project:**
+In the test `tests/08-TestWithConfig.spec.ts`, the "Side Effect Test" demonstrates this problem:
+- First request: `api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200)` sets `queryParams = { limit: 10, offset: 0 }`
+- Second request: `api.path("/tags").getRequest(200)` should have no query parameters, but the previous `queryParams` persist
+- Result: The `/tags` endpoint receives unexpected query parameters (`?limit=10&offset=0`), potentially causing incorrect API behavior or test failures
+
+**The solution:**
+The `clearUpFields()` method resets all stateful fields (`apiPath`, `queryParams`, `apiHeaders`, `apiBody`, `baseUrl`) after each request completes. This ensures that each request starts with a clean slate, preventing state leakage between API calls.
+
+**Advantages:**
+- Prevents unintended state leakage between requests
+- Makes each request independent and predictable
+- Simplifies test writing by eliminating the need to manually reset state
+- Reduces bugs caused by stale data from previous requests
+- Improves test reliability and maintainability
+
+**Disadvantages:**
+- Requires careful placement of `clearUpFields()` to ensure it executes even if errors occur
+- If `clearUpFields()` is called too early (before the request is sent), it could clear data needed for logging or error handling
+- The method must be called in all request methods, creating potential for inconsistency
+- No guarantee that cleanup happens if an exception occurs before the cleanup call
+
+**When to consider alternatives:**
+- **Immutable builder pattern**: Instead of mutating state, return new instances for each request (more memory-intensive but eliminates state issues)
+- **Request-scoped state**: Use a request context object that's created fresh for each request
+- **Functional approach**: Pass all request parameters directly to request methods instead of using fluent setters
+- **Builder with explicit reset**: Require explicit `reset()` calls between requests (more verbose but gives developers control)
+
+**Connection to practical implementation:**
+The `clearUpFields()` method is strategically placed **after** the HTTP request is sent but **before** response processing. This ensures:
+1. The request is sent with the correct configuration (state is still available)
+2. Logging captures the actual request details (before cleanup)
+3. State is cleared immediately after sending, preventing leakage
+4. Response processing happens with a clean state for potential retries or error handling
+
+The implementation uses a private method that resets all fields to their initial values, ensuring complete isolation between requests while maintaining the fluent API's convenience.
+
+### ⚙️ 37.2 Updating code according the context:
+
+#### 37.2.1 Little side effect regarding params:
+
+Create a new test with `/articles` and `/tags` request which must failed
+```ts
+/* tests/08-TestWithConfig.spec.ts */
+import { expect } from "../utils/custom-expect";
+import { test } from "../utils/fixtures";
+
+let authToken: string;
+test.beforeAll("runs before all", async ({ api, config }) => {
+  console.log("\n\n\n🚀 LOGIN");
+  const tokenResponse = await api
+    .path("/users/login")
+    .body({ user: { email: config.userEmail, password: config.userPassword } })
+    .postRequest(200);
+
+  authToken = "Token " + tokenResponse.user.token;
+  console.log("\n 🔐 authToken: ", authToken);
+
+  console.log("� tokenResponse.user: ", tokenResponse.user);
+});
+
+test("Side Effect Test", async ({ api }) => {
+  // /articles request
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).shouldBeLessThanOrEqual(10);
+  expect(response.articlesCount).shouldEqual(10);
+  // /tags request
+  const response2 = await api.path("/tags").getRequest(200);
+  expect(response2.tags.length).shouldBeLessThanOrEqual(9);
+  expect(response2.tags[0]).shouldEqual("Test");
+});
+``` 
+![Article request with params](../img/section04-lecture037-001.png)
+![Tags request with params which not must be there](../img/section04-lecture037-002.png)
+
+
+#### 37.2.2 create a new method in order to clean up all fields:
+```ts
+/* utils/request-handler.ts */
+import { APIRequestContext, expect } from "@playwright/test";
+import { APILogger } from "./logger";
+
+export class RequestHandler {
+  private request: APIRequestContext;
+  private logger: APILogger;
+  private baseUrl: string | undefined;  // 👈🏽 ✅ (1)
+  private defaultBaseUrl: string;
+  private apiPath: string = "";
+  private queryParams: object = {};
+  private apiHeaders: Record<string, string> = {};
+  private apiBody: object = {};
+
+  constructor(request: APIRequestContext, apiBaseUrl: string, logger: APILogger) {
+    this.request = request;
+    this.defaultBaseUrl = apiBaseUrl;
+    this.logger = logger;
+  }
+
+  url(url: string) {
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string) {
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object) {
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: Record<string, string>) {
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object) {
+    this.apiBody = body;
+    return this;
+  }
+
+  async getRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+
+    // Log the GET request
+    this.logger.logRequest("GET", url, this.apiHeaders, this.apiBody);
+
+    // Send the request
+    const response = await this.request.get(url, {
+      headers: this.apiHeaders,
+    });
+    this.clearUpFields();  // 👈🏽 ✅ (2)
+
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
+    const responseJSON = await response.json();
+
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.getRequest);
+    return responseJSON;
+  }
+
+  async postRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+
+    // Log the POST request
+    this.logger.logRequest("POST", url, this.apiHeaders, this.apiBody);
+
+    // Send the request
+    const response = await this.request.post(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+    this.clearUpFields();  // 👈🏽 ✅ (2)
+
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
+    const responseJSON = await response.json();
+
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.postRequest);
+
+    return responseJSON;
+  }
+
+  async putRequest(statusCode: number) {
+    // Get the URL
+    const url = this.getUrl();
+
+    // Log the PUT request
+    this.logger.logRequest("PUT", url, this.apiHeaders, this.apiBody);
+
+    // Send the PUT request
+    const response = await this.request.put(url, {
+      headers: this.apiHeaders,
+      data: this.apiBody,
+    });
+    this.clearUpFields();  // 👈🏽 ✅ (2)
+
+    // Obtain the actual status and response JSON
+    const actualStatus = response.status();
+    const responseJSON = await response.json();
+
+    // Log the response
+    this.logger.logResponse(actualStatus, responseJSON);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.putRequest);
+
+    return responseJSON;
+  }
+
+  async deleteRequest(statusCode: number) {
+    const url = this.getUrl();
+
+    // Log the DELETE request
+    this.logger.logRequest("DELETE", url, this.apiHeaders);
+
+    const response = await this.request.delete(url, {
+      headers: this.apiHeaders,
+    });
+    this.clearUpFields();  // 👈🏽 ✅ (2)
+
+    // Obtain the actual status
+    const actualStatus = response.status();
+
+    // Log the response
+    this.logger.logResponse(actualStatus);
+
+    // Assert the actual status is equal to the expected status
+    // ♻️ expect(actualStatus).toEqual(statusCode);
+    this.statusCodeValidator(actualStatus, statusCode, this.deleteRequest);
+
+    return response;
+  }
+
+  private getUrl() {
+    const url = new URL(`${this.baseUrl || this.defaultBaseUrl}${this.apiPath}`);
+
+    for (const [key, value] of Object.entries(this.queryParams)) {
+      url.searchParams.append(key, value);
+    }
+    //console.log("\n🚀 url: ", url.toString(), "\n");
+    return url.toString();
+  }
+
+  // Private method to validate the status code in "expect(actualStatus).toEqual(statusCode);"
+  private statusCodeValidator(actualStatus: number, expectedStatus: number, callingMethod: Function) {
+    if (actualStatus !== expectedStatus) {
+      const logs = this.logger.getRecentLogs();
+      const error = new Error(`Expected status ${expectedStatus} but got ${actualStatus}\n\nRecent API Activity: \n${logs}`);
+      Error.captureStackTrace(error, callingMethod);
+      throw error;
+    }
+  }
+
+  private clearUpFields() {  // 👈🏽 ✅ (1)
+    this.apiBody = {};
+    this.apiHeaders = {};
+    this.baseUrl = undefined;
+    this.apiPath = "";
+    this.queryParams = {};
+  }
+}
+``` 
+
+#### RequestHandler Flow
+```mermaid
+sequenceDiagram
+    participant Test as Test Script
+    participant Handler as RequestHandler
+    participant Logger as APILogger
+    participant API as APIRequestContext
+    participant Server as External API
+
+    %% Configuration Phase
+    Note over Test,Handler: CONFIGURATION PHASE
+    Test->>Handler: .url("https://api.example.com")
+    activate Handler
+    Handler-->>Test: return this (for chaining)
+    
+    Test->>Handler: .path("/users")
+    Handler-->>Test: return this
+    
+    Test->>Handler: .headers({"Auth": "token"})
+    Handler-->>Test: return this
+    
+    Test->>Handler: .body({"name": "John"})
+    Handler-->>Test: return this
+    
+    Note over Test,Handler: State is now set:<br/>- baseUrl: "https://api.example.com"<br/>- apiPath: "/users"<br/>- apiHeaders: {"Auth": "token"}<br/>- apiBody: {"name": "John"}
+    
+    %% Execution Phase
+    Note over Test,Handler: EXECUTION PHASE
+    Test->>Handler: .postRequest(201)
+    
+    Handler->>Handler: getUrl()<br/>Builds: https://api.example.com/users
+    
+    Handler->>Logger: logRequest("POST", url, headers, body)
+    activate Logger
+    Logger-->>Handler: Log recorded
+    deactivate Logger
+    
+    Handler->>API: request.post(url, {headers, data:body})
+    activate API
+    API->>Server: HTTP POST /users
+    activate Server
+    Server-->>API: HTTP Response (201 Created)
+    deactivate Server
+    API-->>Handler: Response object
+    deactivate API
+    
+    Note over Handler: 🚨 CRITICAL MOMENT<br/>State is still available for logging
+    Handler->>Handler: 🚀 clearUpFields()
+    Note over Handler: State is now cleared:<br/>- baseUrl: undefined<br/>- apiPath: ""<br/>- apiHeaders: {}<br/>- apiBody: {}
+    
+    %% Response Processing Phase
+    Note over Test,Handler: RESPONSE PROCESSING PHASE
+    Handler->>Handler: response.status() → 201
+    Handler->>Handler: response.json() → {"id": 123}
+    
+    Handler->>Logger: logResponse(201, {"id": 123})
+    activate Logger
+    Logger-->>Handler: Log recorded
+    deactivate Logger
+    
+    Handler->>Handler: statusCodeValidator(201, 201)
+    Handler-->>Test: return {"id": 123}
+    deactivate Handler
+```
+
+#### Alternative Diagram Showing the Problem If clearUpFields() Was Called Earlier:
+```mermaid
+sequenceDiagram
+    participant Test as Test Script
+    participant Handler as RequestHandler
+    participant Logger as APILogger
+    participant API as APIRequestContext
+    participant Server as External API
+
+    Test->>Handler: .postRequest(201)
+    
+    Handler->>Handler: getUrl()
+    Note over Handler: URL built successfully
+    
+    Handler->>Logger: logRequest("POST", url, headers, body)
+    Note over Logger: Logs actual request data ✓
+    
+    %% 🚨 INCORRECT: Clearing BEFORE sending request
+    Handler->>Handler: 🚀🔥 clearUpFields() ⚠️ TOO EARLY!
+    Note over Handler: State cleared!<br/>Headers and body are now empty!
+    
+    Handler->>API: request.post(url, {headers, data:body})
+    Note over Handler,API: ⚠️ PROBLEM: headers={}, data={}<br/>Empty request sent!
+    
+    API->>Server: HTTP POST /users<br/>(No headers, no body)
+    Server-->>API: HTTP 400 Bad Request
+    API-->>Handler: Error response
+    
+    Handler->>Logger: logResponse(400)
+    Handler->>Handler: statusCodeValidator(400, 201)
+    Note over Handler: ❌ Validation fails<br/>But debugging is harder because<br/>logs show correct request<br/>but actual request was empty!
+    
+    Handler-->>Test: Throws error
+```
+
+#### 37.2.3
+
+The implementation is complete. The `clearUpFields()` method ensures that each request starts with a clean state, preventing side effects between consecutive API calls.
+
+### 🐞 37.3 Issues:
+
+| Issue | Status | Log/Error |
+|---|---|---|
+| **No error handling guarantee**: If an exception occurs before `clearUpFields()` is called (e.g., network error, timeout), the state remains dirty and affects subsequent requests. The cleanup should be wrapped in a `try-finally` block to ensure it always executes. | ⚠️ Identified | File: `utils/request-handler.ts` lines 45-68, 71-97, 99-125, 127-149. `clearUpFields()` is called after the request but not protected by error handling. If `response.status()` or `response.json()` throws, cleanup never happens. |
+| **Inconsistent cleanup timing**: The `clearUpFields()` is called immediately after sending the request but before processing the response. If response processing fails, the state is already cleared, which might make debugging harder since the request configuration is lost. | ℹ️ Low Priority | File: `utils/request-handler.ts`. The cleanup happens at line 56 (getRequest), 83 (postRequest), 111 (putRequest), 136 (deleteRequest), but response processing happens after. If response processing fails, we lose the request context. |
+| **Missing cleanup in error scenarios**: If `statusCodeValidator()` throws an error, the state has already been cleared, but if an error occurs before `clearUpFields()` (e.g., in `getUrl()` or during request sending), state persists. | ⚠️ Identified | File: `utils/request-handler.ts`. No `try-finally` protection around request execution. Errors in `this.request.get/post/put/delete()` or `getUrl()` could leave state dirty. |
+| **No validation of cleanup effectiveness**: There's no mechanism to verify that `clearUpFields()` actually resets all state correctly. If a new field is added to the class but forgotten in `clearUpFields()`, it could cause subtle bugs. | ℹ️ Low Priority | File: `utils/request-handler.ts` line 171-177. The `clearUpFields()` method manually resets each field, but there's no automated check to ensure all stateful fields are included. |
+| **Potential race condition in concurrent tests**: If tests run in parallel and share the same `RequestHandler` instance (though unlikely with Playwright fixtures), state could be cleared by one test while another is still using it. | ℹ️ Low Priority | File: `utils/fixtures.ts`. Each test gets its own `RequestHandler` instance, so this is unlikely, but worth noting for future parallel execution scenarios. |
+| **Type safety issue with object reset**: The `queryParams` and `apiBody` are reset to `{}` (empty object), but TypeScript doesn't enforce that these are actually objects. If someone accidentally assigns a non-object value, the reset might not work as expected. | ℹ️ Low Priority | File: `utils/request-handler.ts` lines 10-11. Types are `object` which is too generic. Should use more specific types like `Record<string, any>` or proper interfaces. |
+
+### 🧱 37.4 Pending Fixes (TODO)
+
+```md
+- [ ] Wrap request execution in `try-finally` blocks to ensure `clearUpFields()` always executes, even if errors occur during request sending or response processing. File: `utils/request-handler.ts` lines 45-68, 71-97, 99-125, 127-149
+- [ ] Consider moving `clearUpFields()` to a `finally` block to guarantee cleanup regardless of success or failure. This ensures state is always reset even if exceptions occur.
+- [ ] Add unit tests to verify that `clearUpFields()` correctly resets all stateful fields and that subsequent requests don't inherit state from previous requests
+- [ ] Create a helper method or use reflection to automatically detect and reset all stateful fields, reducing the risk of forgetting to reset new fields when they're added
+- [ ] Improve type safety by replacing `object` types with more specific types (e.g., `Record<string, any>` for `queryParams` and `apiBody`) to prevent accidental type mismatches
+- [ ] Add JSDoc comments to `clearUpFields()` explaining when and why it's called, and document the order of operations (request → cleanup → response processing)
+- [ ] Consider adding a `reset()` public method that can be called explicitly by tests if they need to reset state manually between requests
+- [ ] Add logging or debugging hooks to track when `clearUpFields()` is called to help diagnose state-related issues in tests
+- [ ] Document the stateful nature of `RequestHandler` in class-level JSDoc to warn developers about the need for cleanup between requests
+- [ ] Consider adding a flag or option to disable automatic cleanup for advanced use cases where state persistence might be desired
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 ---
 

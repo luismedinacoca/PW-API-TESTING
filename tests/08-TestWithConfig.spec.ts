@@ -15,6 +15,16 @@ test.beforeAll("runs before all", async ({ api, config }) => {
   console.log("� tokenResponse.user: ", tokenResponse.user);
 });
 
+test("Side Effect Test", async ({ api }) => {
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).shouldBeLessThanOrEqual(10);
+  expect(response.articlesCount).shouldEqual(10);
+
+  const response2 = await api.path("/tags").getRequest(200);
+  expect(response2.tags.length).shouldBeLessThanOrEqual(9);
+  expect(response2.tags[0]).shouldEqual("Test");
+});
+
 test("Second Test - GET Articles", async ({ api }) => {
   const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
   expect(response.articles.length).shouldBeLessThanOrEqual(10);
