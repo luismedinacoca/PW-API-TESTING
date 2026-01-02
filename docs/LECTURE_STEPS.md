@@ -2563,6 +2563,185 @@ The implementation is complete. The `clearUpFields()` method ensures that each r
 - [ ] Consider adding a flag or option to disable automatic cleanup for advanced use cases where state persistence might be desired
 ```
 
+## 📚 Lecture 038: *Authorization Helper*
+
+### 🧠 38.1 Context
+
+An **authorization helper** is a reusable utility that performs authentication (login) and returns an **Authorization header value** (token) that can be attached to subsequent API calls.
+
+In API test automation, this pattern is useful because:
+
+- **It avoids duplication**: login logic (endpoint, request body, success status, token extraction) is written once and reused.
+- **It improves maintainability**: if the login endpoint or payload changes, we update one helper instead of many tests.
+- **It reduces test noise**: tests can focus on business behavior (create/update/delete) rather than setup mechanics.
+
+In this project, authenticated endpoints require:
+
+- **Header**: `Authorization: Token <jwt>`
+- **Token source**: the `/users/login` response at `response.user.token`
+
+Examples in this repo:
+
+- `tests/09-TestWithCreteToken.spec.ts` calls `createToken(...)` in `beforeAll` and reuses the resulting header for multiple tests.
+- `helpers/createToken.ts` creates its own request context and `RequestHandler`, so tests no longer depend on the `api` fixture to perform login.
+
+Advantages:
+
+- **DRY & consistent**: one token generation flow for all tests.
+- **Encapsulation**: token creation details (URL, endpoint, payload, status checks) are hidden from tests.
+- **Safer setup**: the helper can clean up its API context (`dispose`) reliably.
+
+Disadvantages:
+
+- **Extra request context per token**: creating a fresh `APIRequestContext` for each token call can be slightly slower.
+- **Coupling to a specific auth scheme**: this helper returns `"Token <...>"` which matches Conduit API, but may differ across systems (e.g., `Bearer <...>`).
+
+When to consider alternatives:
+
+- **Use storage state / session caching** if you want to avoid logging in for each test file.
+- **Use a fixture** that generates the token once per worker when scaling test suites.
+- **Use a service user / API key** if the system supports stable non-expiring credentials for automation.
+
+### ⚙️ 38.2 Updating code according the context:
+
+#### 38.2.1 Adding `helpers/createToken.ts` file:
+```ts
+/* helpers/createToken.ts */
+import { RequestHandler } from "../utils/request-handler";
+export async function createToken(api: RequestHandler, email: string, password: string) {
+  const tokenResponse = await api
+    .path("/users/login")
+    .body({ user: { email: email, password: password } })
+    .postRequest(200);
+  return "Token " + tokenResponse.user.token;
+}
+``` 
+
+and running the test:
+
+```ts
+/* tests/09-TestWithCreteToken.spec.ts */
+import { createToken } from "../helpers/createToken";    // 👈🏽 ✅
+import { expect } from "../utils/custom-expect";
+import { test } from "../utils/fixtures";
+let authToken: string;
+test.beforeAll("runs before all", async ({ api, config }) => {
+  console.log("\n\n\n🚀 LOGIN");
+  // const tokenResponse = await api
+  //   .path("/users/login")
+  //   .body({ user: { email: config.userEmail, password: config.userPassword } })
+  //   .postRequest(200);
+  //authToken = "Token " + tokenResponse.user.token;
+  authToken = await createToken(api, config.userEmail, config.userPassword);    // 👈🏽 ✅
+  console.log("\n 🔐 authToken: ", authToken);
+});
+
+test("Side Effect Test", async ({ api }) => {
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).shouldBeLessThanOrEqual(10);
+  expect(response.articlesCount).shouldEqual(10);
+
+  const response2 = await api.path("/tags").getRequest(200);
+  expect(response2.tags.length).shouldBeLessThanOrEqual(10);
+  expect(response2.tags[0]).shouldEqual("Test");
+});
+``` 
+
+![](../img/section04-lecture038-001.png)
+
+Issue:
+* dependency on the `api` fixture
+* need to pass into this reusable function.
+
+#### 38.2.2 Making `createToken` independent:
+```ts
+/* helpers/createToken.ts */
+import { RequestHandler } from "../utils/request-handler";
+import { request } from "@playwright/test";                             // 👈🏽 ✅
+import { APILogger } from "../utils/logger";                            // 👈🏽 ✅ 
+import { config } from "../api-test.config";                            // 👈🏽 ✅
+
+type LoginResponse = {
+  user: {
+    token: string;
+  };
+};
+
+export async function createToken(email: string, password: string): Promise<string> {    // 👈🏽 ✅
+  if (!email) {
+    throw new Error("createToken: 'email' is required");
+  }
+
+  if (!password) {
+    throw new Error("createToken: 'password' is required");
+  }
+
+  const context = await request.newContext();                           // 👈🏽 ✅
+  const logger = new APILogger();                                       // 👈🏽 ✅
+  const api = new RequestHandler(context, config.apiUrl, logger);       // 👈🏽 ✅
+
+  try {
+    const tokenResponse = (await api
+      .path("/users/login")
+      .body({ user: { email: email, password: password } })
+      .postRequest(200)) as LoginResponse;
+
+    if (!tokenResponse?.user?.token) {
+      throw new Error("createToken: missing token in login response");
+    }
+
+    return "Token " + tokenResponse.user.token;
+  } catch (error) {
+    const safeError = error instanceof Error ? error : new Error(String(error));
+    Error.captureStackTrace(safeError, createToken);
+    throw safeError;
+  } finally {
+    await context.dispose();
+  }
+}
+``` 
+
+
+#### 38.2.3
+```ts
+/* tests/09-TestWithCreteToken.spec.ts */
+import { createToken } from "../helpers/createToken";
+import { expect } from "../utils/custom-expect";
+import { test } from "../utils/fixtures";
+
+let authToken: string;
+test.beforeAll("runs before all", async ({ config }) => {
+  if (!config.userEmail || !config.userPassword) {
+    throw new Error("userEmail or userPassword is not defined in config");
+  }
+
+  authToken = await createToken(config.userEmail, config.userPassword);
+});
+
+``` 
+
+
+### 🐞 38.3 Issues:
+
+| Issue | Status | Log/Error |
+|---|---|---|
+| **Swallowed error in docs example**: the `catch` block captures the stack but does not rethrow, which makes tests continue with `undefined` token and creates confusing downstream failures. | ✅ Fixed | File: `docs/LECTURE_STEPS.md` section 38.2.2. The helper must `throw` after capturing the stack to fail fast. |
+| **Weak typing for login response**: without a response type, `tokenResponse.user.token` can fail at runtime if the API contract changes. | ✅ Fixed | File: `helpers/createToken.ts`. Added `LoginResponse` typing and a guard for missing token. |
+| **Missing input validation**: calling `createToken("", "")` produces hard-to-diagnose auth failures. | ✅ Fixed | File: `helpers/createToken.ts`. Added early validation for `email` and `password`. |
+| **Extra context creation per token call**: `request.newContext()` is created for each `createToken` call. If many tests call this repeatedly, it can slow the suite. | ℹ️ Low Priority | File: `helpers/createToken.ts`. Consider caching the token per worker or moving token generation into a fixture with broader scope. |
+
+
+### 🧱 38.4 Pending Fixes (TODO)
+
+```md
+- [ ] Consider caching the auth token per worker/test file to avoid repeated logins. Files: `helpers/createToken.ts`, `tests/09-TestWithCreteToken.spec.ts`
+- [ ] Add a dedicated auth fixture (e.g. `authToken`) that generates the token once and injects it into tests, instead of managing a module-level variable. File: `utils/fixtures.ts`
+- [ ] Create a small response contract interface for `/users/login` (and other auth endpoints) to keep API typing consistent across the test suite. Files: `helpers/createToken.ts` (and future auth helpers)
+- [ ] Standardize auth header formatting (`Token` vs `Bearer`) via a helper (e.g. `formatAuthHeader(token)`) if supporting multiple APIs/environments. Files: `helpers/createToken.ts`, tests using `.headers({ Authorization: authToken })`
+```
+
+
+
 
 
 
@@ -2578,6 +2757,8 @@ The implementation is complete. The `clearUpFields()` method ensures that each r
 ---
 
 🔥 🔥 🔥 
+
+<br>
 
 ## 📚 Lecture YYY: *{{TITLE_NAME}}*
 
@@ -2609,7 +2790,5 @@ The implementation is complete. The `clearUpFields()` method ensures that each r
 
 ### 🧱 XX.3 Pending Fixes (TODO)
 
-```md
 - [ ] 
-```
 
