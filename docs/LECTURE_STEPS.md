@@ -209,6 +209,9 @@ npx playwright test
 
 # 🧳 Section 04: Building a Framework
 
+<br>
+
+
 ## 📚 Lecture 029: URL Builder
 
 ### 🧠 29.1 Context
@@ -343,6 +346,8 @@ test("First Test using RequestHandler class", async ({ api }) => {
 - [ ] Add validation for required parameters before building URL
 ```
 
+<br>
+
 
 ## 📚 Lecture 030: Request Handler Constructor
 
@@ -444,6 +449,8 @@ export const test = base.extend<TestOptions>({
 - [ ] Add JSDoc comments to document constructor parameters
 ```
 
+
+<br>
 
 ## 📚 Lecture 031: Get Requester
 
@@ -696,6 +703,9 @@ test("Third Test - GET Tags", async ({ api }) => {  // 👈🏽 ✅
 - [ ] Implement request timeout configuration
 - [ ] Add support for different response content types (not just JSON)
 ```
+
+
+<br>
 
 
 ## 📚 Lecture 032: Post, Put, and Delete Requester
@@ -996,6 +1006,9 @@ test("Create, Update and Delete an Article", async ({ api }) => {
 - [ ] Consider adding a method to reset the handler state between requests
 ```
 
+
+<br>
+
 ## 📚 Lecture 033: Custom Logger
 
 ### 🧠 33.1 Context
@@ -1103,6 +1116,9 @@ test("Test logger", async () => {
 - [ ] Consider adding request/response size limits for logging
 - [ ] Add filtering capabilities to retrieve specific log entries
 ```
+
+
+<br>
 
 ## 📚 Lecture 034: Status Code Validator
 
@@ -1472,6 +1488,8 @@ export class RequestHandler {
 - [ ] Add support for custom error messages in status code validator
 - [ ] Consider adding validation for response headers in addition to status codes
 ```
+
+<br>
 
 ## 📚 Lecture 035: Assertions Enhancement
 
@@ -1939,6 +1957,8 @@ test("Second Test - GET Articles", async ({ api }) => {
 - [ ] Add unit tests for custom matchers
 ```
 
+<br>
+
 ## 📚 Lecture 036: *API Configuration File*
 
 ### 🧠 36.1 Context
@@ -2161,6 +2181,7 @@ set TEST_ENV=prod && npx playwright test [test_relative_path]
 - [ ] Consider adding support for config file overrides (e.g., `api-test.config.local.ts`) for local development
 ```
 
+<br>
 
 ## 📚 Lecture 037: *Request Handler Improvement*
 
@@ -2562,6 +2583,7 @@ The implementation is complete. The `clearUpFields()` method ensures that each r
 - [ ] Document the stateful nature of `RequestHandler` in class-level JSDoc to warn developers about the need for cleanup between requests
 - [ ] Consider adding a flag or option to disable automatic cleanup for advanced use cases where state persistence might be desired
 ```
+<br>
 
 ## 📚 Lecture 038: *Authorization Helper*
 
