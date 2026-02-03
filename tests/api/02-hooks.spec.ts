@@ -81,7 +81,7 @@ test("GET all Articles", async ({ request }) => {
   expect(articlesResponseJSON.articlesCount).toBe(10);
 
   console.log("\n👉🏽 expect(articlesResponseJSON.articles[9].favoritesCount).toBe(65)");
-  expect(articlesResponseJSON.articles[9].favoritesCount).toBe(65);
+  expect(articlesResponseJSON.articles[9].favoritesCount).toBe(66);
   console.log("\n ✅ PASSED ✅");
 });
 

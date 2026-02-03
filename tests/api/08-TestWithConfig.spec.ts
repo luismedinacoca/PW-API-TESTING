@@ -1,22 +1,18 @@
-import { createToken } from "../helpers/createToken";
-import { expect } from "../utils/custom-expect";
-import { test } from "../utils/fixtures";
+import { expect } from "../../utils/custom-expect";
+import { test } from "../../utils/fixtures";
 
 let authToken: string;
 test.beforeAll("runs before all", async ({ api, config }) => {
   console.log("\n\n\n🚀 LOGIN");
-  // const tokenResponse = await api
-  //   .path("/users/login")
-  //   .body({ user: { email: config.userEmail, password: config.userPassword } })
-  //   .postRequest(200);
+  const tokenResponse = await api
+    .path("/users/login")
+    .body({ user: { email: config.userEmail, password: config.userPassword } })
+    .postRequest(200);
 
-  //authToken = "Token " + tokenResponse.user.token;
-  //authToken = await createToken(api, config.userEmail, config.userPassword);
-  if (!config.userEmail || !config.userPassword) {
-    throw new Error("userEmail or userPassword is not defined in config");
-  }
-  authToken = await createToken(config.userEmail, config.userPassword);
+  authToken = "Token " + tokenResponse.user.token;
   console.log("\n 🔐 authToken: ", authToken);
+
+  console.log("� tokenResponse.user: ", tokenResponse.user);
 });
 
 test("Side Effect Test", async ({ api }) => {

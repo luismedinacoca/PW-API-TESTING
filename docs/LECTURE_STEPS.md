@@ -1,110 +1,6 @@
-x# 👨🏾‍💻 Section 04: Building a Framework
+# 👨🏾💻 Project: PW-API-TESTING
 
-
-## 📑 Table of Contents
-
-- [🧳 Section 04: Building a Framework](#-section-04-building-a-framework)
-  - [📚 Lecture 029: URL Builder](#-lecture-029-url-builder)
-    - [🧠 29.1 Context](#-291-context)
-    - [⚙️ 29.2 Updating code according the context](#️-292-updating-code-according-the-context)
-      - [29.2.1 Full Example and Result](#2921-full-example-and-result)
-      - [29.2.2 Fixture Implementation](#2922-fixture-implementation)
-      - [29.2.3 Request Handler Implementation](#2923-request-handler-implementation)
-      - [29.2.4 Test Implementation](#2924-test-implementation)
-    - [🧱 29.3 Pending Fixes (TODO)](#-293-pending-fixes-todo)
-  - [📚 Lecture 030: Request Handler Constructor](#-lecture-030-request-handler-constructor)
-    - [🧠 30.1 Context](#-301-context)
-    - [⚙️ 30.2 Updating code according the context](#️-302-updating-code-according-the-context)
-      - [30.2.1 Request Handler Constructor Implementation](#3021-request-handler-constructor-implementation)
-      - [30.2.2 Updated Fixture Implementation](#3022-updated-fixture-implementation)
-    - [🧱 30.3 Pending Fixes (TODO)](#-303-pending-fixes-todo)
-  - [📚 Lecture 031: Get Requester](#-lecture-031-get-requester)
-    - [🧠 31.1 Context](#-311-context)
-    - [⚙️ 31.2 Updating code according the context](#️-312-updating-code-according-the-context)
-      - [31.2.1 Create the `getRequest` Method](#3121-create-the-getrequest-method)
-      - [31.2.2 Test Implementation](#3122-test-implementation)
-      - [31.2.3 Expected Result](#3123-expected-result)
-      - [31.2.4 Adding Assertion to `getRequest` Method](#3124-adding-assertion-to-getrequest-method)
-      - [31.2.5 Updated Test with Assertions](#3125-updated-test-with-assertions)
-      - [31.2.6 Applying `getRequest` to `/tags` Endpoint](#3126-applying-getrequest-to-tags-endpoint)
-    - [🧱 31.3 Pending Fixes (TODO)](#-313-pending-fixes-todo)
-  - [📚 Lecture 032: Post, Put, and Delete Requester](#-lecture-032-post-put-and-delete-requester)
-    - [🧠 32.1 Context](#-321-context)
-    - [⚙️ 32.2 Updating code according the context](#️-322-updating-code-according-the-context)
-      - [32.2.1 Create Post, Put, Delete Request Methods](#3221-create-post-put-delete-request-methods)
-      - [32.2.2 Test Implementation - Create and Delete Article](#3222-test-implementation---create-and-delete-article)
-      - [32.2.3 Test Implementation - Create, Update and Delete Article](#3223-test-implementation---create-update-and-delete-article)
-    - [🧱 32.3 Pending Fixes (TODO)](#-323-pending-fixes-todo)
-  - [📚 Lecture 033: Custom Logger](#-lecture-033-custom-logger)
-    - [🧠 33.1 Context](#-331-context)
-    - [⚙️ 33.2 Updating code according the context](#️-332-updating-code-according-the-context)
-      - [33.2.1 Problem Illustration](#3321-problem-illustration)
-      - [33.2.2 Create `utils/logger.ts` File](#3322-create-utilsloggerts-file)
-      - [33.2.3 Logger Implementation](#3323-logger-implementation)
-      - [33.2.4 Test Implementation](#3324-test-implementation)
-    - [🧱 33.3 Pending Fixes (TODO)](#-333-pending-fixes-todo)
-  - [📚 Lecture 034: Status Code Validator](#-lecture-034-status-code-validator)
-    - [🧠 34.1 Context](#-341-context)
-    - [⚙️ 34.2 Updating code according the context](#️-342-updating-code-according-the-context)
-      - [34.2.1 Update Fixture to Include Logger](#3421-update-fixture-to-include-logger)
-      - [34.2.2 Update `request-handler.ts` File with Logger Integration](#3422-update-request-handlerts-file-with-logger-integration)
-      - [34.2.3 Create Custom Status Code Validator](#3423-create-custom-status-code-validator)
-      - [34.2.4 Apply `statusCodeValidator` to All Request Methods](#3424-apply-statuscodevalidator-to-all-request-methods)
-    - [🧱 34.3 Pending Fixes (TODO)](#-343-pending-fixes-todo)
-  - [📚 Lecture 035: Assertions Enhancement](#-lecture-035-assertions-enhancement)
-    - [🧠 35.1 Context](#-351-context)
-    - [⚙️ 35.2 Updating code according the context:](#️-352-updating-code-according-the-context)
-      - [35.2.1 Create `custom-expect.ts` file:](#3521-create-custom-expectts-file)
-      - [35.2.2 Call the `setCustomExpectLogger` method in `utils/fixtures.ts`file:](#3522-call-the-setcustomexpectlogger-method-in-utilsfixturestsfile)
-      - [35.2.3 Redefine `toEqual()` method to `shouldEqual()`:](#3523-redefine-toequal-method-to-shouldequal)
-      - [35.2.4 Adding the missing logs](#3524-adding-the-missing-logs)
-      - [35.2.5 Running negative scenario](#3525-running-negative-scenario)
-      - [35.2.6 Adding new logic inside `try` block](#3526-adding-new-logic-inside-try-block)
-      - [35.2.6 Fixing the `shouldEqual()` method issue related to recognize as valid method](#3526-fixing-the-shouldequal-method-issue-related-to-recognize-as-valid-method)
-      - [35.2.7 Create the `shouldBeLessThanOrEqual()` method](#3527-create-the-shouldbelessthanorequal-method)
-      - [35.2.8 Create the `shouldBeLessThanOrEqual()` method](#3528-create-the-shouldbelessthanorequal-method)
-    - [🧱 35.3 Pending Fixes (TODO)](#-353-pending-fixes-todo)
-
-
-## 📚 Visual Project Tree
-
-```
-PW-API-TESTING/
-│
-├── 📁 docs/
-│   └── 📄 LECTURE_STEPS.md                    # Lecture notes and examples for Section 04
-│
-├── 📁 node_modules/                           # Node.js dependencies (excluded from git)
-│
-├── 📁 playwright-report/                      # Playwright HTML test reports
-│   └── 📄 index.html                          # Test execution report
-│
-├── 📁 test-results/                           # Test execution artifacts (excluded from git)
-│
-├── 📁 tests/                                  # Test suite directory
-│   ├── 📄 01-example.spec.ts                  # Basic API test examples (GET, POST, PUT, DELETE)
-│   ├── 📄 02-hooks.spec.ts                    # Tests demonstrating beforeAll/afterAll hooks
-│   ├── 📄 03-smokeTest.spec.ts                # Smoke tests for API endpoints
-│   ├── 📄 04-smokeTestWithFixture.spec.ts     # Tests using custom fixtures
-│   ├── 📄 05-smokeTestFixturePostPutDeleteRequests.spec.ts  # CRUD operations tests
-│   ├── 📄 06-TestwithLogger.spec.ts           # Tests demonstrating logger functionality
-│   └── 📄 07-TestwithExpectLogger.spec.ts     # Tests using custom expect matchers
-│
-├── 📁 utils/                                  # Utility modules
-│   ├── 📄 fixtures.ts                         # Playwright custom fixtures definition
-│   ├── 📄 request-handler.ts                  # RequestHandler class for API request building
-│   ├── 📄 logger.ts                           # APILogger class for request/response logging
-│   └── 📄 custom-expect.ts                    # Custom expect matchers with logger integration
-│
-├── 📄 .gitignore                              # Git ignore rules
-├── 📄 package.json                            # Node.js project configuration
-├── 📄 package-lock.json                       # Dependency lock file
-├── 📄 playwright.config.ts                    # Playwright test configuration
-├── 📄 README.md                               # Project documentation
-└── 📄 PROJECT_STRUCTURE.md                     # This file - project structure documentation
-```
-
-## 📚 Project Overview
+## 📋 Project Overview
 
 ### Purpose
 This is a **Playwright API Testing** project designed to test REST API endpoints using Playwright's request API. The project demonstrates various testing patterns including basic API tests, hooks, and custom fixtures.
@@ -207,12 +103,543 @@ npx playwright test
 
 ---
 
-# 🧳 Section 04: Building a Framework
+## 📑 Table of Contents
+
+- [👨🏾💻 Project: PW-API-TESTING](#-project-pw-api-testing)
+  - [📋 Project Overview](#-project-overview)
+    - [Purpose](#purpose)
+    - [Technology Stack](#technology-stack)
+    - [Key Components](#key-components)
+      - [📁 Configuration Files](#-configuration-files)
+      - [📁 Test Files (`tests/`)](#-test-files-tests)
+      - [📁 Utility Modules (`utils/`)](#-utility-modules-utils)
+      - [📁 Documentation (`docs/`)](#-documentation-docs)
+    - [API Endpoints Tested](#api-endpoints-tested)
+    - [Test Execution](#test-execution)
+    - [Generated Directories](#generated-directories)
+    - [Git Status](#git-status)
+  - [📑 Table of Contents](#-table-of-contents)
+  - [📁 Visual Project Tree](#-visual-project-tree)
+  - [🧳 Section 04: Building a Framework](#-section-04-building-a-framework)
+    <details>
+    <summary>Section 04 - Lessons</summary>
+    
+      * [📚 Lesson 029: URL Builder](#-029-lesson-029--url-builder)
+      * [📚 Lesson 030: Request Handler Constructor](#-030-lesson-030--request-handler-constructor)
+      * [📚 Lesson 031: Get Requester](#-031-lesson-031--get-requester)
+      * [📚 Lesson 032: Post, Put, and Delete Requester](#-032-lesson-032--post-put-and-delete-requester)
+      * [📚 Lesson 033: Custom Logger](#-033-lesson-033--custom-logger)
+      * [📚 Lesson 034: Status Code Validator](#-034-lesson-034--status-code-validator)
+      * [📚 Lesson 035: Assertions Enhancement](#-035-lesson-035--assertions-enhancement)
+      * [📚 Lesson 036: API Configuration File](#-036-lesson-036--api-configuration-file)
+      * [📚 Lesson 037: Request Handler Improvement](#-037-lesson-037--request-handler-improvement)
+      * [📚 Lesson 038: Authorization Helper](#-038-lesson-038--authorization-helper)
+    </details>
+
+## 📁 Visual Project Tree
+
+```
+PW-API-TESTING/
+│
+├── 📁 docs/
+│   └── 📄 LECTURE_STEPS.md                                  # Lecture notes and examples for Section 04
+│
+├── 📁 node_modules/                                         # Node.js dependencies (excluded from git)
+│
+├── 📁 playwright-report/                                    # Playwright HTML test reports
+│   └── 📄 index.html                                        # Test execution report
+│
+├── 📁 test-results/                                         # Test execution artifacts (excluded from git)
+│
+├── 📁 tests/                                                # Test suite directory
+│   ├── 📄 01-example.spec.ts                                # Basic API test examples (GET, POST, PUT, DELETE)
+│   ├── 📄 02-hooks.spec.ts                                  # Tests demonstrating beforeAll/afterAll hooks
+│   ├── 📄 03-smokeTest.spec.ts                              # Smoke tests for API endpoints
+│   ├── 📄 04-smokeTestWithFixture.spec.ts                   # Tests using custom fixtures
+│   ├── 📄 05-smokeTestFixturePostPutDeleteRequests.spec.ts  # CRUD operations tests
+│   ├── 📄 06-TestwithLogger.spec.ts                         # Tests demonstrating logger functionality
+│   └── 📄 07-TestwithExpectLogger.spec.ts                   # Tests using custom expect matchers
+│
+├── 📁 utils/                                                # Utility modules
+│   ├── 📄 fixtures.ts                                       # Playwright custom fixtures definition
+│   ├── 📄 request-handler.ts                                # RequestHandler class for API request building
+│   ├── 📄 logger.ts                                         # APILogger class for request/response logging
+│   └── 📄 custom-expect.ts                                  # Custom expect matchers with logger integration
+│
+├── 📄 .gitignore                                            # Git ignore rules
+├── 📄 package.json                                          # Node.js project configuration
+├── 📄 package-lock.json                                     # Dependency lock file
+├── 📄 playwright.config.ts                                  # Playwright test configuration
+├── 📄 README.md                                             # Project documentation
+└── 📄 PROJECT_STRUCTURE.md                                  # This file - project structure documentation
+```
+
+## 🧳 Section 04: Building a Framework
+
+### 📑 Table of Contents 2
+
+- [📚 Lesson 027: Fluent Interface Design](#-027-lesson-027--fluent-interface-design)
+- [📚 Lesson 029: URL Builder](#-029-lesson-029--url-builder)
+- [📚 Lesson 030: Request Handler Constructor](#-030-lesson-030--request-handler-constructor)
+- [📚 Lesson 031: Get Requester](#-031-lesson-031--get-requester)
+- [📚 Lesson 032: Post, Put, and Delete Requester](#-032-lesson-032--post-put-and-delete-requester)
+- [📚 Lesson 033: Custom Logger](#-033-lesson-033--custom-logger)
+- [📚 Lesson 034: Status Code Validator](#-034-lesson-034--status-code-validator)
+- [📚 Lesson 035: Assertions Enhancement](#-035-lesson-035--assertions-enhancement)
+- [📚 Lesson 036: API Configuration File](#-036-lesson-036--api-configuration-file)
+- [📚 Lesson 037: Request Handler Improvement](#-037-lesson-037--request-handler-improvement)
+- [📚 Lesson 038: Authorization Helper](#-038-lesson-038--authorization-helper)
+
 
 <br>
 
+## 🔧 027. Lesson 027 — *Fluent Interface Design*
 
-## 📚 Lecture 029: URL Builder
+- [027. Lesson 027 — *Fluent Interface Design*](#-027-lesson-027--fluent-interface-design)
+  - [027.1 Context](#-0271-context)
+  - [027.2 Updating code according the context](#%EF%B8%8F-0272-updating-code-according-the-context)
+    - [027.2.1 Consider each API endpoint Testing struggles with](#0271-consider-each-api-endpoint-testing-struggles-with)
+    - [027.2.2 Add/create a new file: `utils/request-handler.ts`](#0272-addcreate-a-new-file-utilsrequest-handlerts)
+    - [027.2.3 Adding the fields and assigning values](#0273-adding-the-fields-and-assigning-values)
+    - [027.2.4 Create `smokeTest.spec.ts` file](#0274-create-smoketestspects-file)
+  - [027.3 Issues](#-0273-issues)
+  - [027.4 Pending Fixes (TODO)](#-0274-pending-fixes-todo)
+
+### 🧠 027.1 Context
+
+The **Fluent Interface Design** pattern (also known as **Method Chaining**) is a software design technique for creating more readable and expressive code by allowing multiple method calls to be chained together in a single statement. Each method in the chain returns the object itself (`this`), enabling subsequent method calls.
+
+#### **Key Concepts**
+
+1. **Return `this`**: Each setter method returns `this` (the current object instance), allowing the next method call to be chained immediately.
+2. **Builder Pattern Relationship**: Fluent interfaces are often used in conjunction with the Builder pattern to construct complex objects step by step.
+3. **Domain-Specific Languages (DSL)**: Fluent APIs create a mini-DSL that reads almost like natural language, making the code self-documenting.
+4. **Immutable vs Mutable**: The implementation in this project uses mutable state (modifying instance properties), which requires careful state management.
+
+#### **Advantages**
+
+- **Improved Readability**: Code reads like a sentence, making intent clear at a glance
+- **Reduced Boilerplate**: Eliminates the need for intermediate variables and repeated object references
+- **Discoverability**: IDE autocomplete shows available methods after each chain link
+- **Compact Code**: Complex configurations can be expressed in fewer lines
+- **Self-Documenting**: Method names describe what each step does
+
+#### **Disadvantages/Gotchas**
+
+- **Debugging Difficulty**: Breakpoints on a single chained line can be harder to step through
+- **Error Messages**: Stack traces may point to the entire chain rather than the specific failing method
+- **State Management**: Mutable fluent interfaces require careful reset of internal state between uses (as addressed in Lesson 039)
+- **Overuse**: Not every API benefits from fluent design; simple setters may be clearer for single-property changes
+
+#### **When to Consider Alternatives**
+
+- When methods have significant side effects that should be explicit
+- When the order of method calls matters semantically (unless enforced by types)
+- When debugging complex chains becomes problematic
+- When the API is simple enough that chaining adds no value
+
+#### **Project Implementation**
+
+In this project, the `RequestHandler` class uses the fluent interface pattern to build HTTP requests for API testing. Instead of passing all parameters to a single method:
+
+```ts
+// Traditional approach (verbose)
+const api = new RequestHandler();
+api.setUrl('https://api.example.com');
+api.setPath('/articles');
+api.setParams({ limit: 10 });
+await api.get();
+```
+
+The fluent approach allows:
+
+```ts
+// Fluent approach (concise and readable)
+await api
+  .url('https://api.example.com')
+  .path('/articles')
+  .params({ limit: 10 })
+  .getRequest(200);
+```
+
+### ⚙️ 027.2 Updating code according the context:
+
+#### **Summary**
+
+- This section introduces the Fluent Interface pattern for building API requests in a readable, chainable manner
+- The problem solved is reducing verbosity when configuring multiple request properties (URL, path, headers, params, body)
+- Subsection 027.2.1 identifies the components that need configuration for each API endpoint
+- Subsection 027.2.2 shows the initial skeleton of the `RequestHandler` class with empty methods
+- Subsection 027.2.3 adds private fields and implements `return this` to enable method chaining
+- Subsection 027.2.4 demonstrates the fluent API in a test file, showing the improved readability
+
+#### 027.2.1 Consider each API endpoint Testing struggles with:
+
+**Subsection Summary**
+
+- Identifies the five key components that must be configured for any HTTP API request
+- These components become the building blocks for the fluent interface methods
+- Each component maps directly to a method in the `RequestHandler` class
+
+- URL
+- Path
+- Headers
+- Parameters
+- Body
+
+
+#### 027.2.2 Add/create a new file: `utils/request-handler.ts` (responsible for all API requests):
+
+**Subsection Summary**
+
+- Creates the initial `RequestHandler` class skeleton in `utils/request-handler.ts`
+- Defines five methods corresponding to the request components identified in 027.2.1
+- Methods are empty placeholders at this stage, establishing the API surface
+- This skeleton follows the principle of designing the API interface before implementation
+
+```ts
+/* utils/request-handler.ts */
+export class RequestHandler {
+
+  url(url: string){}
+
+  path(path: string){}
+
+  params(params: object){}
+
+  headers(headers: object){}
+
+  body(body: object){}
+}
+```
+
+
+#### 027.2.3 Adding the fields and assigning values:
+
+**Subsection Summary**
+
+- Adds private fields to store each request configuration component
+- Implements the core fluent interface pattern by returning `this` from each method
+- The `return this` statement is the key enabler of method chaining
+- Default values are provided for optional fields (empty strings/objects)
+- This implementation allows any order of method calls since all fields have defaults
+
+```ts
+/* utils/request-handler.ts */
+export class RequestHandler {
+
+  private baseUrl: string;
+  private apiPath: string = '';
+  private queryParams: object = {};
+  private apiHeaders: object = {};
+  private apiBody: object = {};
+
+  url(url: string){
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string){
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object){
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: object){
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object){
+    this.apiBody = body;
+    return this;
+  }
+}
+``` 
+
+| Aspect              | With `return this`                  | Without return this              |
+|---------------------|-----------------------------------|----------------------------------|
+| **Pattern**         | Chaining                          | Sequential (Step-by-step)        |
+| **Syntax**          | `obj.method1().method2()`         | `obj.method1(); obj.method2();`  |
+| **Returned value**  | The object instance (RequestHandler) | `undefined` (or void)            |
+| **Ideal use**       | Object configuration, Query Builders, Fluent APIs | Simple command execution, Setters that don't require chaining |
+
+
+#### 027.2.4 Create `smokeTest.spec.ts` file:
+
+**Subsection Summary**
+
+- Demonstrates the fluent interface in action within a Playwright test
+- Shows how method chaining creates readable, declarative request configuration
+- The test instantiates `RequestHandler` and chains all five configuration methods
+- Illustrates the DSL-like quality where the code reads as: "create api, set url, set path, set params, set headers, set body"
+- Note: This example only configures the request but doesn't execute it (no HTTP method call yet)
+
+```ts
+/* ./test/smokeTest.spec.ts */
+import { test } from '@playwright/test';
+import { RequestHandler } from '../utils/request-handler';
+
+test('smoke test', async () => {
+  const api = new RequestHandler();
+
+api
+  .url('https://conduit-api.bondaracademy.com/api')
+  .path('articles')
+  .params({limit:10, offset:0})
+  .headers({
+    Authorization: "authToken"
+  })
+  .body({
+    "user":{
+      "email": "pwapiuser@test.com",
+      "password": "Welcome"
+    }
+  });
+});
+``` 
+
+
+### 🐞 027.3 Issues:
+
+- The `smokeTest.spec.ts` example configures a request but never executes it (no GET/POST method)
+- The example mixes GET request parameters with a POST body in the same chain, which is semantically confusing
+- Type safety is weak: `object` type is used instead of more specific types
+- No state reset mechanism is shown, which will cause issues when making multiple requests (addressed in Lesson 039)
+
+| Issue | Status | Log/Error |
+|---|---|---|
+| Missing HTTP execution methods | ℹ️ Informational | `smokeTest.spec.ts:5-18` — The test configures the request but never calls an HTTP method to execute it |
+| Semantically confusing example | ℹ️ Low Priority | `smokeTest.spec.ts:8-17` — Combining GET-style params with a POST-style body in one example may confuse learners |
+| Weak typing on `object` params | ⚠️ Identified | `request-handler.ts:7-11` — Using `object` type loses type safety; consider `Record<string, unknown>` or specific interfaces |
+| State persistence between requests | ⚠️ Identified | No `clearUpFields()` method shown — reusing the instance will carry over previous request state |
+
+### 🧱 027.4 Pending Fixes (TODO)
+
+- [ ] Add HTTP execution methods (`getRequest`, `postRequest`, etc.) to complete the `RequestHandler` class — `utils/request-handler.ts`
+- [ ] Update `smokeTest.spec.ts` to demonstrate a complete request/response flow
+- [ ] Improve type safety by replacing `object` with `Record<string, string>` for headers and `Record<string, unknown>` for body — `utils/request-handler.ts:7-11`
+- [ ] Add a `clearUpFields()` private method to reset state between requests (see Lesson 039 for implementation)
+- [ ] Consider separating the smoke test example into two tests: one for GET with params, one for POST with body
+
+
+
+<br>
+
+## 🔧 028. Lesson 028 — *Test Fixture*
+
+- [028. Lesson 028 — *Test Fixture*](#-028-lesson-028---test-fixture)
+  - [028.1 Context](#-0281-context)
+  - [028.2 Updating code according the context](#-0282-updating-code-according-the-context)
+    - [028.2.1 Need to modify the following test case in `beforeAll`](#0281-need-to-modify-the-following-test-case-in-beforeall)
+    - [028.2.2 Create `fixture.ts` file](#0282-create-fixturets-file)
+    - [028.2.3 Import the `requestHandler` in new `fixture.ts`](#0283-import-the-requesthandler-in-new-fixturets)
+    - [028.2.4 Import `fixture.ts` in the `example.spec.ts` file](#0284-import-fixturets-in-the-examplespects-file)
+    - [028.2.5 Fixing the fixture type](#0285-fixing-the-fixture-type)
+  - [028.3 Issues](#-0283-issues)
+  - [028.4 Pending Fixes (TODO)](#-0284-pending-fixes-todo)
+
+### 🧠 028.1 Context
+
+**Test Fixtures** in Playwright are a powerful mechanism for providing reusable, isolated test environments. They allow you to define custom objects, utilities, or services that can be automatically injected into your tests through destructuring in the test function signature.
+
+Fixtures solve the problem of test setup and teardown by encapsulating common resources (like API handlers, database connections, or authenticated sessions) in a reusable way that promotes the DRY principle (Don't Repeat Yourself).
+
+#### **Key Concepts**
+
+1.  **Base Test Extension**: Playwright's `test` object can be extended using `test.extend<T>()` to add custom fixtures. The generic type `<T>` defines the shape of your custom fixtures.
+2.  **The `use()` Callback**: Each fixture receives a `use` function that must be called with the fixture value. This establishes the lifecycle — setup happens before `use()`, and teardown happens after `use()` completes.
+3.  **Automatic Injection**: Once defined, fixtures are automatically available in test functions through destructuring (e.g., `async ({ api }) => { ... }`).
+4.  **Worker vs Test Scope**: Fixtures can be scoped per-test (default) or per-worker using `{ scope: 'worker' }` for expensive resources.
+
+#### **Advantages**
+
+-   **Reusability**: Define once, use across all tests without duplication.
+-   **Isolation**: Each test gets its own fixture instance, preventing cross-test contamination.
+-   **Type Safety**: Full TypeScript support with generics ensures compile-time error detection.
+-   **Clean Test Code**: Tests focus on assertions rather than setup/teardown boilerplate.
+-   **Automatic Lifecycle Management**: Setup and teardown are handled automatically.
+
+#### **Disadvantages/Gotchas**
+
+-   **Learning Curve**: Understanding the `use()` callback pattern requires familiarity with Playwright's internals.
+-   **Debugging Complexity**: Fixture initialization errors can be harder to trace than inline setup code.
+-   **Over-Engineering Risk**: Simple tests may not need custom fixtures; using them everywhere adds unnecessary complexity.
+
+#### **When to Consider Alternatives**
+
+-   **Simple One-Off Setup**: Use `test.beforeEach()` or `test.beforeAll()` for straightforward setup that doesn't need reuse.
+-   **Global State**: Use `globalSetup` for truly global configuration (e.g., environment variables).
+
+#### **Project Implementation**
+
+In this project, the `utils/fixtures.ts` file defines a custom `api` fixture that provides a pre-configured `RequestHandler` instance to all tests. This eliminates the need to manually instantiate `RequestHandler` in every test file.
+
+### ⚙️ 028.2 Updating code according the context:
+
+#### **Summary**
+
+-   This section demonstrates how to move from manual `beforeAll` setup to a reusable Playwright `test` fixture.
+-   It solves the problem of repetitive instantiation of the `RequestHandler` across multiple test files.
+-   The subsections guide you through creating the fixture file, implementing the `api` fixture, and using it in a test.
+
+#### 028.2.1 Need to modify the following test case in `beforeAll`:
+
+**Subsection Summary**
+-   Highlighting the traditional, less ideal approach of setting up requests manually in `beforeAll`.
+-   This approach relies on global variables (like `authToken`) and repetitive code.
+-   The goal is to eliminate this manual setup.
+
+```ts
+/* tests/example.spec.ts */
+import { test, request } from '@playwright/test';
+
+// ❌ OLD APPROACH: Manual setup
+test.beforeAll('Get Token', async ({ request }) => {
+  const tokenResponse = await request.post('https://conduit-api.bondaracademy.com/api/users/login', {
+    data: {
+      "user": {
+        "email": "pwapiuser@test.com",
+        "password": "Welcome"
+      }
+    }
+  })
+  const tokenResponseJSON = await tokenResponse.json();
+  authToken = "Token " + tokenResponseJSON.user.token;
+});
+```
+
+#### 028.2.2 Create `fixture.ts` file:
+
+**Subsection Summary**
+-   Establishing the `utils/fixtures.ts` file as the home for custom test extensions.
+-   Extending the base Playwright test object.
+-   Defining the skeleton for the `api` fixture.
+
+```ts
+/* utils/fixture.ts */
+import { test as base } from '@playwright/test';
+
+base.extend({
+  api: async({}, use) => {
+    // Fixture implementation
+  }
+})
+```
+
+#### 028.2.3 Import the `requestHandler` in new `fixture.ts`:
+
+**Subsection Summary**
+-   Integrating the `RequestHandler` class into the fixture.
+-   Instantiating the class and passing it to the `use` function.
+-   This makes the `RequestHandler` instance available to tests.
+
+```ts
+/* utils/fixture.ts */
+import { test as base } from '@playwright/test';
+import { RequestHandler } from './request-handler';
+
+export const test = base.extend({
+  api: async({}, use) => {
+    const requestHandler = new RequestHandler(); // ⚠️ Note: Simplified for this lesson
+    await use(requestHandler);
+  }
+})
+```
+
+#### 028.2.4 Import `fixture.ts` in the `example.spec.ts` file:
+
+**Subsection Summary**
+-   Importing the custom `test` object from `fixtures.ts`.
+-   Destructuring the `api` fixture in the test function.
+-   Using the fluent API capabilities of the injected `api` instance.
+
+```ts
+/* tests/example.spec.ts */
+import { test } from '../utils/fixture';   // 👈🏽 Import custom test
+
+test.beforeAll('Get Token', async ({ api }) => {   // 👈🏽 Inject 'api'
+  api
+  .url('https://conduit-api.bondaracademy.com/api')
+  .path('articles')
+  .params({limit:10, offset:0})
+  .headers({
+    Authorization: "authToken"
+  })
+  .body({
+    "user":{
+      "email": "pwapiuser@test.com",
+      "password": "Welcome"
+    }
+  });
+});
+```
+
+#### 028.2.5 Fixing the fixture type:
+
+**Subsection Summary**
+-   Adding TypeScript support via `TestOptions`.
+-   Ensuring that the `api` object is correctly typed as `RequestHandler` in tests.
+-   This enables auto-completion and type checking.
+
+```ts
+/* utils/fixture.ts */
+import { test as base } from '@playwright/test';
+import { RequestHandler } from './request-handler';
+
+export type TestOptions = {
+  api: RequestHandler;
+}   // 👈🏽 Validating Type
+
+export const test = base.extend<TestOptions>({    // 👈🏽 Passing Type
+  api: async({}, use) => {
+    const requestHandler = new RequestHandler();
+    await use(requestHandler);
+  }
+})
+```
+
+![fixture type](../img/section04-lecture028-001.png)
+
+### 🐞 028.3 Issues:
+
+-   The lesson shows a simplified `RequestHandler` that doesn't match the actual class signature (which needs `request`, `url`, `logger`).
+-   The example code configures a request but never executes it, which might be confusing.
+
+| Issue | Status | Log/Error |
+|---|---|---|
+| Constructor Signature Mismatch | ⚠️ Identified | Lesson shows `new RequestHandler()` but `utils/request-handler.ts` requires `(request, apiBaseUrl, logger)`. |
+| Incomplete Example | ℹ️ Informational | Code in 028.2.4 sets up the request but never calls `.getRequest()`. |
+| Hardcoded Token String | ⚠️ Identified | `Authorization: "authToken"` uses a string literal instead of a variable. |
+| Missing Logger/Config | ℹ️ Low Priority | Actual `fixtures.ts` also sets up `APILogger` and `config`, not shown here. |
+
+### 🧱 028.4 Pending Fixes (TODO)
+
+- [ ] Update `utils/fixtures.ts` snippets to match the actual constructor signature: `new RequestHandler(request, config.apiUrl, logger)`.
+- [ ] Add the `APILogger` initialization to the fixture code snippets to match the actual file.
+- [ ] Replace `Authorization: "authToken"` with a proper variable reference or explanation in the example code.
+- [ ] Provide a complete, runnable test example that includes the `.getRequest()` execution step to prove the fixture works.
+
+
+
+
+<br>
+
+## 🔧 029. Lesson 029 — URL Builder
+
+- [029. Lesson 029 — URL Builder](#-029-lesson-029--url-builder)
+  - [29.1 Context](#-291-context)
+  - [29.2 Updating code according the context](#-292-updating-code-according-the-context)
+    - [29.2.1 Full Example and Result](#2921-full-example-and-result)
+    - [29.2.2 Fixture Implementation](#2922-fixture-implementation)
+    - [29.2.3 Request Handler Implementation](#2923-request-handler-implementation)
+    - [29.2.4 Test Implementation](#2924-test-implementation)
+  - [29.3 Issues](#-293-issues)
+  - [29.4 Pending Fixes (TODO)](#-294-pending-fixes-todo)
 
 ### 🧠 29.1 Context
 
@@ -337,7 +764,9 @@ test("First Test using RequestHandler class", async ({ api }) => {
 });
 ```
 
-### 🧱 29.3 Pending Fixes (TODO)
+### 🐞 29.3 Issues:
+
+### 🧱 29.4 Pending Fixes (TODO)
 
 ```md
 - [ ] The `getUrl()` method is private but called directly in tests - needs to be made public or a public method should wrap it
@@ -349,7 +778,15 @@ test("First Test using RequestHandler class", async ({ api }) => {
 <br>
 
 
-## 📚 Lecture 030: Request Handler Constructor
+## 🔧 030. Lesson 030 — Request Handler Constructor
+
+- [030. Lesson 030 — Request Handler Constructor](#-030-lesson-030--request-handler-constructor)
+  - [30.1 Context](#-301-context)
+  - [30.2 Updating code according the context](#-302-updating-code-according-the-context)
+    - [30.2.1 Request Handler Constructor Implementation](#3021-request-handler-constructor-implementation)
+    - [30.2.2 Updated Fixture Implementation](#3022-updated-fixture-implementation)
+  - [30.3 Issues](#-303-issues)
+  - [30.4 Pending Fixes (TODO)](#-304-pending-fixes-todo)
 
 ### 🧠 30.1 Context
 
@@ -440,7 +877,9 @@ export const test = base.extend<TestOptions>({
 });
 ```
 
-### 🧱 30.3 Pending Fixes (TODO)
+### 🐞 30.3 Issues:
+
+### 🧱 30.4 Pending Fixes (TODO)
 
 ```md
 - [ ] Remove unused `defaultBaseUrl` initialization since it's now set in constructor
@@ -452,7 +891,19 @@ export const test = base.extend<TestOptions>({
 
 <br>
 
-## 📚 Lecture 031: Get Requester
+## 🔧 031. Lesson 031 — Get Requester
+
+- [031. Lesson 031 — Get Requester](#-031-lesson-031--get-requester)
+  - [31.1 Context](#-311-context)
+  - [31.2 Updating code according the context](#-312-updating-code-according-the-context)
+    - [31.2.1 Create the `getRequest` Method](#3121-create-the-getrequest-method)
+    - [31.2.2 Test Implementation](#3122-test-implementation)
+    - [31.2.3 Expected Result](#3123-expected-result)
+    - [31.2.4 Adding Assertion to `getRequest` Method](#3124-adding-assertion-to-getrequest-method)
+    - [31.2.5 Updated Test with Assertions](#3125-updated-test-with-assertions)
+    - [31.2.6 Applying `getRequest` to `/tags` Endpoint](#3126-applying-getrequest-to-tags-endpoint)
+  - [31.3 Issues](#-313-issues)
+  - [31.4 Pending Fixes (TODO)](#-314-pending-fixes-todo)
 
 ### 🧠 31.1 Context
 
@@ -694,7 +1145,9 @@ test("Third Test - GET Tags", async ({ api }) => {  // 👈🏽 ✅
   1 passed (1.6s)
 ```
 
-### 🧱 31.3 Pending Fixes (TODO)
+### 🐞 31.3 Issues:
+
+### 🧱 31.4 Pending Fixes (TODO)
 
 ```md
 - [ ] Add error handling for network failures and timeouts
@@ -708,7 +1161,16 @@ test("Third Test - GET Tags", async ({ api }) => {  // 👈🏽 ✅
 <br>
 
 
-## 📚 Lecture 032: Post, Put, and Delete Requester
+## 🔧 032. Lesson 032 — Post, Put, and Delete Requester
+
+- [032. Lesson 032 — Post, Put, and Delete Requester](#-032-lesson-032--post-put-and-delete-requester)
+  - [32.1 Context](#-321-context)
+  - [32.2 Updating code according the context](#-322-updating-code-according-the-context)
+    - [32.2.1 Create Post, Put, Delete Request Methods](#3221-create-post-put-delete-request-methods)
+    - [32.2.2 Test Implementation - Create and Delete Article](#3222-test-implementation---create-and-delete-article)
+    - [32.2.3 Test Implementation - Create, Update and Delete Article](#3223-test-implementation---create-update-and-delete-article)
+  - [32.3 Issues](#-323-issues)
+  - [32.4 Pending Fixes (TODO)](#-324-pending-fixes-todo)
 
 ### 🧠 32.1 Context
 
@@ -995,7 +1457,9 @@ test("Create, Update and Delete an Article", async ({ api }) => {
 
 ![Expected Result - Create, Update & Delete requests](../img/section04-lecture032-002.png)
 
-### 🧱 32.3 Pending Fixes (TODO)
+### 🐞 32.3 Issues:
+
+### 🧱 32.4 Pending Fixes (TODO)
 
 ```md
 - [ ] Add support for PATCH method (partial updates)
@@ -1009,7 +1473,17 @@ test("Create, Update and Delete an Article", async ({ api }) => {
 
 <br>
 
-## 📚 Lecture 033: Custom Logger
+## 🔧 033. Lesson 033 — Custom Logger
+
+- [033. Lesson 033 — Custom Logger](#-033-lesson-033--custom-logger)
+  - [33.1 Context](#-331-context)
+  - [33.2 Updating code according the context](#-332-updating-code-according-the-context)
+    - [33.2.1 Problem Illustration](#3321-problem-illustration)
+    - [33.2.2 Create `utils/logger.ts` File](#3322-create-utilsloggerts-file)
+    - [33.2.3 Logger Implementation](#3323-logger-implementation)
+    - [33.2.4 Test Implementation](#3324-test-implementation)
+  - [33.3 Issues](#-333-issues)
+  - [33.4 Pending Fixes (TODO)](#-334-pending-fixes-todo)
 
 ### 🧠 33.1 Context
 
@@ -1106,7 +1580,9 @@ test("Test logger", async () => {
 
 ![Visual help how Logger works](../img/section04-lecture033-003.png)
 
-### 🧱 33.3 Pending Fixes (TODO)
+### 🐞 33.3 Issues:
+
+### 🧱 33.4 Pending Fixes (TODO)
 
 ```md
 - [ ] Add log rotation/limit to prevent memory issues with long test runs
@@ -1120,7 +1596,17 @@ test("Test logger", async () => {
 
 <br>
 
-## 📚 Lecture 034: Status Code Validator
+## 🔧 034. Lesson 034 — Status Code Validator
+
+- [034. Lesson 034 — Status Code Validator](#-034-lesson-034--status-code-validator)
+  - [34.1 Context](#-341-context)
+  - [34.2 Updating code according the context](#-342-updating-code-according-the-context)
+    - [34.2.1 Update Fixture to Include Logger](#3421-update-fixture-to-include-logger)
+    - [34.2.2 Update `request-handler.ts` File with Logger Integration](#3422-update-request-handlerts-file-with-logger-integration)
+    - [34.2.3 Create Custom Status Code Validator](#3423-create-custom-status-code-validator)
+    - [34.2.4 Apply `statusCodeValidator` to All Request Methods](#3424-apply-statuscodevalidator-to-all-request-methods)
+  - [34.3 Issues](#-343-issues)
+  - [34.4 Pending Fixes (TODO)](#-344-pending-fixes-todo)
 
 ### 🧠 34.1 Context
 
@@ -1478,7 +1964,9 @@ export class RequestHandler {
 }
 ```
 
-### 🧱 34.3 Pending Fixes (TODO)
+### 🐞 34.3 Issues:
+
+### 🧱 34.4 Pending Fixes (TODO)
 
 ```md
 - [ ] Add support for status code ranges (e.g., 2xx, 3xx) instead of exact matches
@@ -1491,7 +1979,22 @@ export class RequestHandler {
 
 <br>
 
-## 📚 Lecture 035: Assertions Enhancement
+## 🔧 035. Lesson 035 — Assertions Enhancement
+
+- [035. Lesson 035 — Assertions Enhancement](#-035-lesson-035--assertions-enhancement)
+  - [35.1 Context](#-351-context)
+  - [35.2 Updating code according the context](#-352-updating-code-according-the-context)
+    - [35.2.1 Create `custom-expect.ts` file](#3521-create-custom-expectts-file)
+    - [35.2.2 Call the `setCustomExpectLogger` method in `utils/fixtures.ts`file](#3522-call-the-setcustomexpectlogger-method-in-utilsfixturestsfile)
+    - [35.2.3 Redefine `toEqual()` method to `shouldEqual()`](#3523-redefine-toequal-method-to-shouldequal)
+    - [35.2.4 Adding the missing logs](#3524-adding-the-missing-logs)
+    - [35.2.5 Running negative scenario](#3525-running-negative-scenario)
+    - [35.2.6 Adding new logic inside `try` block](#3526-adding-new-logic-inside-try-block)
+    - [35.2.6 Fixing the `shouldEqual()` method issue related to recognize as valid method](#3526-fixing-the-shouldequal-method-issue-related-to-recognize-as-valid-method)
+    - [35.2.7 Create the `shouldBeLessThanOrEqual()` method](#3527-create-the-shouldbelessthanorequal-method)
+    - [35.2.8 Create the `shouldBeLessThanOrEqual()` method](#3528-create-the-shouldbelessthanorequal-method)
+  - [35.3 Issues](#-353-issues)
+  - [35.4 Pending Fixes (TODO)](#-354-pending-fixes-todo)
 
 ### 🧠 35.1 Context
 
@@ -1944,7 +2447,9 @@ test("Second Test - GET Articles", async ({ api }) => {
 1 passed (1.8s)
 ```
 
-### 🧱 35.3 Pending Fixes (TODO)
+### 🐞 35.3 Issues:
+
+### 🧱 35.4 Pending Fixes (TODO)
 
 ```md
 - [ ] Add more custom matchers (shouldContain, shouldBeGreaterThan, etc.)
@@ -1959,7 +2464,19 @@ test("Second Test - GET Articles", async ({ api }) => {
 
 <br>
 
-## 📚 Lecture 036: *API Configuration File*
+## 🔧 036. Lesson 036 — API Configuration File
+
+- [036. Lesson 036 — API Configuration File](#-036-lesson-036--api-configuration-file)
+  - [36.1 Context](#-361-context)
+  - [36.2 Updating code according the context](#-362-updating-code-according-the-context)
+    - [36.2.1 create `api-test.config.ts` file](#3621-create-api-testconfigts-file)
+    - [36.2.2 Import `api-test.config.ts` into `fixture.ts` and then create the fixture for config file](#3622-import-api-testconfigts-into-fixturets-and-then-create-the-fixture-for-config-file)
+    - [36.2.3 Apply this new Fixture with Config in a test](#3623-apply-this-new-fixture-with-config-in-a-test)
+    - [36.2.4 Update `config` according the environment](#3624-update-config-according-the-environment)
+    - [36.2.5 Verify running a test](#3625-verify-running-a-test)
+    - [36.2.6 Running a test from terminal and setting up an Environment](#3626-running-a-test-from-terminal-and-setting-up-an-environment)
+  - [36.3 Issues](#-363-issues)
+  - [36.4 Pending Fixes (TODO)](#-364-pending-fixes-todo)
 
 ### 🧠 36.1 Context
 
@@ -2183,7 +2700,18 @@ set TEST_ENV=prod && npx playwright test [test_relative_path]
 
 <br>
 
-## 📚 Lecture 037: *Request Handler Improvement*
+## 🔧 037. Lesson 037 — Request Handler Improvement
+
+- [037. Lesson 037 — Request Handler Improvement](#-037-lesson-037--request-handler-improvement)
+  - [37.1 Context](#-371-context)
+  - [37.2 Updating code according the context](#-372-updating-code-according-the-context)
+    - [37.2.1 Little side effect regarding params](#3721-little-side-effect-regarding-params)
+    - [37.2.2 create a new method in order to clean up all fields](#3722-create-a-new-method-in-order-to-clean-up-all-fields)
+    - [37.2.3 RequestHandler Flow](#3723-requesthandler-flow)
+    - [37.2.4 Alternative Diagram Showing the Problem If clearUpFields() Was Called Earlier](#3724-alternative-diagram-showing-the-problem-if-clearupfields-was-called-earlier)
+    - [37.2.5 Summary](#3725-summary)
+  - [37.3 Issues](#-373-issues)
+  - [37.4 Pending Fixes (TODO)](#-374-pending-fixes-todo)
 
 ### 🧠 37.1 Context
 
@@ -2454,7 +2982,7 @@ export class RequestHandler {
 }
 ``` 
 
-#### RequestHandler Flow
+#### 37.2.3 RequestHandler Flow
 ```mermaid
 sequenceDiagram
     participant Test as Test Script
@@ -2519,7 +3047,7 @@ sequenceDiagram
     deactivate Handler
 ```
 
-#### Alternative Diagram Showing the Problem If clearUpFields() Was Called Earlier:
+#### 37.2.4 Alternative Diagram Showing the Problem If clearUpFields() Was Called Earlier:
 ```mermaid
 sequenceDiagram
     participant Test as Test Script
@@ -2554,7 +3082,7 @@ sequenceDiagram
     Handler-->>Test: Throws error
 ```
 
-#### 37.2.3
+#### 37.2.5 Summary
 
 The implementation is complete. The `clearUpFields()` method ensures that each request starts with a clean state, preventing side effects between consecutive API calls.
 
@@ -2585,7 +3113,16 @@ The implementation is complete. The `clearUpFields()` method ensures that each r
 ```
 <br>
 
-## 📚 Lecture 038: *Authorization Helper*
+## 🔧 038. Lesson 038 — Authorization Helper
+
+- [038. Lesson 038 — Authorization Helper](#-038-lesson-038--authorization-helper)
+  - [38.1 Context](#-381-context)
+  - [38.2 Updating code according the context](#-382-updating-code-according-the-context)
+    - [38.2.1 Adding `helpers/createToken.ts` file](#3821-adding-helperscreatetonts-file)
+    - [38.2.2 Making `createToken` independent](#3822-making-createtoken-independent)
+    - [38.2.3 Update test to use independent `createToken`](#3823-update-test-to-use-independent-createtoken)
+  - [38.3 Issues](#-383-issues)
+  - [38.4 Pending Fixes (TODO)](#-384-pending-fixes-todo)
 
 ### 🧠 38.1 Context
 
@@ -2724,7 +3261,7 @@ export async function createToken(email: string, password: string): Promise<stri
 ``` 
 
 
-#### 38.2.3
+#### 38.2.3 Update test to use independent `createToken`:
 ```ts
 /* tests/09-TestWithCreteToken.spec.ts */
 import { createToken } from "../helpers/createToken";
@@ -2774,43 +3311,53 @@ test.beforeAll("runs before all", async ({ config }) => {
 
 
 
-
-
 ---
 
 🔥 🔥 🔥 
 
 <br>
 
-## 📚 Lecture YYY: *{{TITLE_NAME}}*
+## 🔧 XXX. Lesson XXX — *{{LESSON_TITLE}}*
 
-### 🧠 XX.1 Context
+- [XXX. Lesson XXX — *Fluent Interface Design*](#-xxx-lesson-xxx---fluent-interface-design)
+  - [XXX.1 Context](#-xxx1-context)
+  - [XXX.2 Updating code according the context](#-xxx2-updating-code-according-the-context)
+    - [XXX.2.1](#xxx21)
+    - [XXX.2.2](#xxx22)
+    - [XXX.2.3](#xxx23)
+  - [XXX.3 Issues](#-xxx3-issues)
+  - [XXX.4 Pending Fixes (TODO)](#-xxx4-pending-fixes-todo)
+
+### 🧠 XXX.1 Context
 
 
-### ⚙️ XX.2 Updating code according the context:
+### ⚙️ XXX.2 Updating code according the context:
 
-#### XX.2.1
+#### XXX.2.1
 ```ts
 /*  */
 
 ``` 
 
 
-#### XX.2.2
+#### XXX.2.2
 ```ts
 /*  */
 
 ``` 
 
 
-#### XX.2.3
+#### XXX.2.3
 ```ts
 /*  */
 
 ``` 
 
 
-### 🧱 XX.3 Pending Fixes (TODO)
+### 🐞 XXX.3 Issues:
+| Issue | Status | Log/Error |
+|---|---|---|
+
+### 🧱 XXX.4 Pending Fixes (TODO)
 
 - [ ] 
-

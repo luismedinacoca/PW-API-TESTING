@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { test } from "../utils/fixtures";
+import { test } from "../../utils/fixtures";
 
 test("First Test using RequestHandler class", async ({ api }) => {
   api
@@ -9,6 +9,7 @@ test("First Test using RequestHandler class", async ({ api }) => {
     .headers({ Authorization: "authToken" })
     .body({ user: { email: "suspiros@test.com", password: "Test!001" } });
   //.getUrl();
+  api.
 });
 
 test("Second Test - GET Articles", async ({ api }) => {

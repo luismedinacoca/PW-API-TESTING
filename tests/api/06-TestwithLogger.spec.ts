@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
-import { test } from "../utils/fixtures";
-import { APILogger } from "../utils/logger";
+import { test } from "../../utils/fixtures";
+import { APILogger } from "../../utils/logger";
 
 test("Test logger", async () => {
   const logger = new APILogger();

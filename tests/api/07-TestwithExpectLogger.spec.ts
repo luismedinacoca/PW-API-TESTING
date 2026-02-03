@@ -1,28 +1,16 @@
-import { expect } from "../utils/custom-expect";
-import { test } from "../utils/fixtures";
+import { expect } from "../../utils/custom-expect";
+import { test } from "../../utils/fixtures";
 
 let authToken: string;
-test.beforeAll("runs before all", async ({ api, config }) => {
+test.beforeAll("runs before all", async ({ api }) => {
   console.log("\n\n\n🚀 LOGIN");
   const tokenResponse = await api
     .path("/users/login")
-    .body({ user: { email: config.userEmail, password: config.userPassword } })
+    .body({ user: { email: "suspiros@test.com", password: "Test!001" } })
     .postRequest(200);
 
   authToken = "Token " + tokenResponse.user.token;
   console.log("\n 🔐 authToken: ", authToken);
-
-  console.log("� tokenResponse.user: ", tokenResponse.user);
-});
-
-test("Side Effect Test", async ({ api }) => {
-  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
-  expect(response.articles.length).shouldBeLessThanOrEqual(10);
-  expect(response.articlesCount).shouldEqual(10);
-
-  const response2 = await api.path("/tags").getRequest(200);
-  expect(response2.tags.length).shouldBeLessThanOrEqual(9);
-  expect(response2.tags[0]).shouldEqual("Test");
 });
 
 test("Second Test - GET Articles", async ({ api }) => {

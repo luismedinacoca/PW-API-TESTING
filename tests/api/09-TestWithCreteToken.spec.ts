@@ -1,28 +1,44 @@
-import { expect } from "@playwright/test";
-import { test } from "../utils/fixtures";
+import { createToken } from "../../helpers/createToken";
+import { expect } from "../../utils/custom-expect";
+import { test } from "../../utils/fixtures";
 
 let authToken: string;
-test.beforeAll("runs before all", async ({ api }) => {
+test.beforeAll("runs before all", async ({ api, config }) => {
   console.log("\n\n\n🚀 LOGIN");
-  const tokenResponse = await api
-    .path("/users/login")
-    .body({ user: { email: "suspiros@test.com", password: "Test!001" } })
-    .postRequest(200);
+  // const tokenResponse = await api
+  //   .path("/users/login")
+  //   .body({ user: { email: config.userEmail, password: config.userPassword } })
+  //   .postRequest(200);
 
-  authToken = "Token " + tokenResponse.user.token;
+  //authToken = "Token " + tokenResponse.user.token;
+  //authToken = await createToken(api, config.userEmail, config.userPassword);
+  if (!config.userEmail || !config.userPassword) {
+    throw new Error("userEmail or userPassword is not defined in config");
+  }
+  authToken = await createToken(config.userEmail, config.userPassword);
   console.log("\n 🔐 authToken: ", authToken);
+});
+
+test("Side Effect Test", async ({ api }) => {
+  const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
+  expect(response.articles.length).shouldBeLessThanOrEqual(10);
+  expect(response.articlesCount).shouldEqual(10);
+
+  const response2 = await api.path("/tags").getRequest(200);
+  expect(response2.tags.length).shouldBeLessThanOrEqual(10);
+  expect(response2.tags[0]).shouldEqual("Test");
 });
 
 test("Second Test - GET Articles", async ({ api }) => {
   const response = await api.path("/articles").params({ limit: 10, offset: 0 }).getRequest(200);
-  expect(response.articles.length).toBeLessThanOrEqual(10);
-  expect(response.articlesCount).toEqual(10);
+  expect(response.articles.length).shouldBeLessThanOrEqual(10);
+  expect(response.articlesCount).shouldEqual(10);
 });
 
 test("Third Test - GET Tags", async ({ api }) => {
   const response = await api.path("/tags").getRequest(200);
-  expect(response.tags.length).toBeLessThanOrEqual(10);
-  expect(response.tags[0]).toEqual("Test");
+  expect(response.tags.length).shouldBeLessThanOrEqual(10);
+  expect(response.tags[0]).shouldEqual("Test");
 });
 
 test("Create and Delete an Article", async ({ api }) => {

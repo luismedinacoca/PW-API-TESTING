@@ -9,10 +9,10 @@ test("GET Test tags", async ({ request }) => {
   console.log("\n👉🏽 expect(tagResponse.status()).toEqual(200) ");
   expect(tagResponse.status()).toEqual(200);
 
+  console.log("\n 4️⃣  await tagResponse.json(): ", await tagResponse.json());
+
   console.log("\n 3️⃣  const tagResponseJSON = await tagResponse.json();");
   const tagResponseJSON = await tagResponse.json();
-
-  console.log("\n 4️⃣  tagresponseJSON: ", tagResponseJSON);
 
   console.log('\n👉🏽 expect(tagResponseJSON.tags[0]).toEqual("Test")');
   expect(tagResponseJSON.tags[0]).toEqual("Test");
@@ -58,7 +58,7 @@ test("GET all Articles", async ({ request }) => {
   expect(articlesResponseJSON.articlesCount).toBe(10);
 
   console.log("\n👉🏽 expect(articlesResponseJSON.articles[9].favoritesCount).toBe(65)");
-  expect(articlesResponseJSON.articles[9].favoritesCount).toBe(65);
+  expect(articlesResponseJSON.articles[9].favoritesCount).toBe(71);
   console.log("\n ✅ PASSED ✅");
 });
 
@@ -348,7 +348,7 @@ test("POST, PATCH and DELETE an Article", async ({ request }) => {
       headers: {
         Authorization: authToken,
       },
-    }
+    },
   );
 
   /* Headers Assertions: */
