@@ -9,7 +9,7 @@ test("First Test using RequestHandler class", async ({ api }) => {
     .headers({ Authorization: "authToken" })
     .body({ user: { email: "suspiros@test.com", password: "Test!001" } });
   //.getUrl();
-  api.
+  //api.
 });
 
 test("Second Test - GET Articles", async ({ api }) => {

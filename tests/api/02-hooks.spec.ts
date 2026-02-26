@@ -88,7 +88,7 @@ test("GET all Articles", async ({ request }) => {
 test("POST and GET an Article", async ({ request }) => {
   const newDate = Date.now();
 
-  console.log("\n\n\n🚀 POST REQUEST");
+  //console.log("\n\n\n🚀 POST REQUEST");
   //create a new Article:
   const newArticleResponse = await request.post("https://conduit-api.bondaracademy.com/api/articles/", {
     data: {
@@ -103,20 +103,22 @@ test("POST and GET an Article", async ({ request }) => {
       Authorization: authToken,
     },
   });
-  console.log("\n  4️⃣   newArticleResponse: ", newArticleResponse);
+  //console.log("\n  4️⃣   newArticleResponse: ", newArticleResponse);
 
-  console.log("\n  5️⃣   newArticleResponse.status(): ", newArticleResponse.status());
-  expect(newArticleResponse.status()).toEqual(201);
-  console.log("\n👉🏽 expect(newArticleResponse.status()).toEqual(201)");
+  //console.log("\n  5️⃣   newArticleResponse.status(): ", newArticleResponse.status());
+  expect(newArticleResponse.status(), "Expected status 201").toEqual(201);
+  //console.log("\n👉🏽 expect(newArticleResponse.status()).toEqual(201)");
 
   const newArticleResponseJSON = await newArticleResponse.json();
-  console.log("\n  6️⃣   newArticleResponseJSON: ", newArticleResponseJSON);
+  //console.log("\n  6️⃣   newArticleResponseJSON: ", newArticleResponseJSON);
 
-  expect(newArticleResponseJSON.article.title).toEqual(`Test TWO TEST ${newDate}`);
+  expect(newArticleResponseJSON.article.title, `Expected title to be: Test TWO TEST ${newDate}`).toEqual(
+    `Test TWO TEST ${newDate}`,
+  );
   const newTitle = `Test TWO TEST ${newDate}`;
-  console.log("\n👉🏽 expect(newArticleResponseJSON.article.title).toEqual(" + newTitle + ")");
+  //console.log("\n👉🏽 expect(newArticleResponseJSON.article.title).toEqual(" + newTitle + ")");
 
-  console.log("\n\n\n🚀 GET REQUEST");
+  //console.log("\n\n\n🚀 GET REQUEST");
   //Verify this new Article was added:
   const articlesResponse = await request.get("https://conduit-api.bondaracademy.com/api/articles?limit=10&offset=0", {
     headers: {
@@ -126,16 +128,16 @@ test("POST and GET an Article", async ({ request }) => {
   //console.log("\n 7️⃣  articlesResponse: ", articlesResponse);
 
   /* Headers Assertions: */
-  console.log("\n 8️⃣  articlesResponse.status(): ", articlesResponse.status());
-  expect(articlesResponse.status()).toEqual(200);
+  //console.log("\n 8️⃣  articlesResponse.status(): ", articlesResponse.status());
+  expect(articlesResponse.status(), "Expected status 200").toEqual(200);
 
   const articlesResponseJSON = await articlesResponse.json();
-  console.log("\n 9️⃣  articlesResponseJSON: ", articlesResponseJSON);
+  //console.log("\n 9️⃣  articlesResponseJSON: ", articlesResponseJSON);
 
   const foundArticle = articlesResponseJSON.articles.find((a: any) => a.title === newTitle);
-  expect(foundArticle).toBeDefined();
-  expect(foundArticle.title).toEqual(newTitle);
-  console.log("\n👉🏽 expect(foundArticle.title).toEqual(" + newTitle + ")");
+  expect(foundArticle, "Expected foundArticle to be defined").toBeDefined();
+  expect(foundArticle.title, `Expected title to be: ${newTitle}`).toEqual(newTitle);
+  //console.log("\n👉🏽 expect(foundArticle.title).toEqual(" + newTitle + ")");
 
   console.log("\n\n\n  ✅ PASSED ✅");
 });
@@ -302,7 +304,7 @@ test("POST, PATCH and DELETE an Article", async ({ request }) => {
       headers: {
         Authorization: authToken,
       },
-    }
+    },
   );
 
   /* Headers Assertions: */

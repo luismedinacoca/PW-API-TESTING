@@ -124,6 +124,8 @@ npx playwright test
     <details>
     <summary>Section 04 - Lessons</summary>
     
+      * [📚 Lesson 027: Fluent Interface Design](#-027-lesson-027--fluent-interface-design)
+      * [📚 Lesson 028: Test Fixture](#-028-lesson-028--test-fixture)
       * [📚 Lesson 029: URL Builder](#-029-lesson-029--url-builder)
       * [📚 Lesson 030: Request Handler Constructor](#-030-lesson-030--request-handler-constructor)
       * [📚 Lesson 031: Get Requester](#-031-lesson-031--get-requester)
@@ -179,6 +181,7 @@ PW-API-TESTING/
 ### 📑 Table of Contents 2
 
 - [📚 Lesson 027: Fluent Interface Design](#-027-lesson-027--fluent-interface-design)
+- [📚 Lesson 028: Test Fixture](#-028-lesson-028--test-fixture)
 - [📚 Lesson 029: URL Builder](#-029-lesson-029--url-builder)
 - [📚 Lesson 030: Request Handler Constructor](#-030-lesson-030--request-handler-constructor)
 - [📚 Lesson 031: Get Requester](#-031-lesson-031--get-requester)
@@ -189,6 +192,7 @@ PW-API-TESTING/
 - [📚 Lesson 036: API Configuration File](#-036-lesson-036--api-configuration-file)
 - [📚 Lesson 037: Request Handler Improvement](#-037-lesson-037--request-handler-improvement)
 - [📚 Lesson 038: Authorization Helper](#-038-lesson-038--authorization-helper)
+- [📚 Lesson 039: Playwright Workers](#-039-lesson-039--playwright-workers)
 
 
 <br>
@@ -426,7 +430,7 @@ api
 - [ ] Add a `clearUpFields()` private method to reset state between requests (see Lesson 039 for implementation)
 - [ ] Consider separating the smoke test example into two tests: one for GET with params, one for POST with body
 
-
+[↑ top - Lesson 027 — Fluent Interface Design](#-027-lesson-027--fluent-interface-design)
 
 <br>
 
@@ -603,6 +607,8 @@ export const test = base.extend<TestOptions>({    // 👈🏽 Passing Type
 })
 ```
 
+> Go back to the test then try: `api.`:
+
 ![fixture type](../img/section04-lecture028-001.png)
 
 ### 🐞 028.3 Issues:
@@ -624,8 +630,7 @@ export const test = base.extend<TestOptions>({    // 👈🏽 Passing Type
 - [ ] Replace `Authorization: "authToken"` with a proper variable reference or explanation in the example code.
 - [ ] Provide a complete, runnable test example that includes the `.getRequest()` execution step to prove the fixture works.
 
-
-
+[↑ top - Lesson 028 — Test Fixture](#-028-lesson-028--test-fixture)
 
 <br>
 
@@ -637,7 +642,9 @@ export const test = base.extend<TestOptions>({    // 👈🏽 Passing Type
     - [29.2.1 Full Example and Result](#2921-full-example-and-result)
     - [29.2.2 Fixture Implementation](#2922-fixture-implementation)
     - [29.2.3 Request Handler Implementation](#2923-request-handler-implementation)
-    - [29.2.4 Test Implementation](#2924-test-implementation)
+    - [29.2.4 Adding a for loop](#2924-adding-a-for-loop)
+    - [29.2.5 Test Implementation](#2925-test-implementation)
+    - [29.2.6 Updating to private getUrl() method](#2926-updating-to-private-geturl-method)
   - [29.3 Issues](#-293-issues)
   - [29.4 Pending Fixes (TODO)](#-294-pending-fixes-todo)
 
@@ -653,9 +660,56 @@ This lecture introduces the URL Builder pattern for constructing API endpoints d
 
 The `getUrl()` method uses the native `URL` API to properly construct URLs with query parameters, ensuring proper encoding and formatting.
 
+#### Key Concepts
+
+1. **Fluent API Pattern**: Each setter method (`url()`, `path()`, `params()`, `headers()`, `body()`) returns `this`, enabling method chaining for a more readable and expressive API.
+2. **URL API**: The native JavaScript `URL` class provides a robust way to construct and manipulate URLs, including automatic encoding of special characters.
+3. **URLSearchParams**: The `searchParams` property of a `URL` object allows easy manipulation of query string parameters using methods like `append()`, `set()`, and `delete()`.
+4. **Object.entries()**: Converts an object into an array of key-value pairs `[key, value][]`, enabling iteration over object properties in a for-of loop.
+5. **Destructuring Assignment**: The `for (const [key, value] of ...)` syntax extracts key-value pairs directly in the loop declaration.
+6. **Custom Fixtures**: Playwright's `test.extend()` allows creating reusable test fixtures that inject dependencies (like `RequestHandler`) into tests.
+
+#### Advantages
+
+- **Readable and maintainable code**: Fluent API makes test setup clear and self-documenting
+- **Proper URL encoding**: The native `URL` API handles special characters automatically
+- **Flexible configuration**: Supports both custom and default base URLs
+- **Separation of concerns**: URL construction logic is encapsulated in the `RequestHandler` class
+- **Reusability**: The fixture pattern allows sharing the same instance across multiple tests
+- **Type safety**: TypeScript provides compile-time checking for method parameters
+
+#### Disadvantages/Gotchas
+
+- **Object type usage**: Using `object` type for `queryParams`, `apiHeaders`, and `apiBody` loses type safety; consider using `Record<string, string | number | boolean>` or dedicated interfaces
+- **No validation**: The current implementation doesn't validate URLs or required parameters
+- **Duplicate subsection numbering**: The original lesson has two sections labeled 29.2.5
+- **Private method visibility**: Making `getUrl()` private after initially being public can break existing tests
+- **No error handling**: Invalid URLs or missing paths could cause runtime errors
+
+#### When to Consider Alternatives
+
+- **Simple one-off requests**: If you only need to make a single API call, using Playwright's built-in `request.get()` directly might be simpler
+- **Complex query string needs**: For advanced query string manipulation (arrays, nested objects), consider libraries like `qs` or `query-string`
+- **GraphQL APIs**: For GraphQL endpoints, a dedicated GraphQL client would be more appropriate
+- **OpenAPI/Swagger**: If you have an API specification, consider generating typed clients from it
+
 ### ⚙️ 29.2 Updating code according the context
 
+#### **Summary**
+
+- This section demonstrates how to build a URL Builder pattern using the `RequestHandler` class with a fluent API design
+- The implementation progresses from a basic `getUrl()` method to a full-featured URL constructor with query parameters support
+- Subsections cover: conceptual example (29.2.1), fixture setup (29.2.2), initial RequestHandler implementation (29.2.3), for loop explanation for query params (29.2.4), test usage (29.2.5), and encapsulation via private method (29.2.6)
+- The code uses native JavaScript `URL` and `URLSearchParams` APIs for proper URL construction and encoding
+- Screenshots illustrate the console output at different stages of implementation
+
 #### 29.2.1 Full Example and Result
+
+**Subsection Summary**
+- Provides a conceptual walkthrough of how `getUrl()` constructs a complete URL with query parameters
+- Demonstrates the iteration process: each key-value pair from `queryParams` is appended to the URL
+- Shows the final URL format: `https://api.example.com/articles?limit=10&tag=js&featured=true`
+- Introduces the initial `getUrl()` method implementation that logs the constructed URL
 
 Let's assume the following values:
 
@@ -680,7 +734,73 @@ Final Result:
 https://api.example.com/articles?limit=10&tag=js&featured=true
 ```
 
+
+> Adding the `getUrl()` method:
+```ts
+/* utils/request-handler.ts */
+export class RequestHandler {
+  private baseUrl: string = "";
+  private apiPath: string = "";
+  private queryParams: object = {};
+  private apiHeaders: object = {};
+  private apiBody: object = {};
+
+  url(url: string) {
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string) {
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object) {
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: object) {
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object) {
+    this.apiBody = body;
+    return this;
+  }
+
+  getUrl() {    // 👈🏽 ✅
+    const url = new URL(`${this.baseUrl}${this.apiPath}`);
+    console.log("\n🚀 url: ", url.toString(), "\n");
+  }
+}
+```
+
+Go back to the test:
+```ts
+/* tests/04-smokeTestWithFixture.spec.ts */
+import { test } from "../utils/fixtures";
+
+test("First Test using RequestHandler class", async ({ api }) => {
+  api
+    .url("https://random-url.com/api")
+    .path("/articles")
+    .params({ limit: 10, offset: 0, foo: "bar" })
+    .headers({ Authorization: "authToken" })
+    .body({ user: { email: "suspiros@test.com", password: "Test!001" } })
+    .getUrl();  // 👈🏽 ✅
+});
+```
+![](../img/section04-lecture029-001.png)
+
 #### 29.2.2 Fixture Implementation
+
+**Subsection Summary**
+- Defines a custom Playwright fixture that provides a `RequestHandler` instance to all tests via the `api` parameter
+- Uses `test.extend<TestOptions>()` to create a typed test function with the custom fixture
+- The fixture creates a new `RequestHandler` instance and passes it to tests using the `use()` callback
+- Enables dependency injection pattern for cleaner test code
 
 ```ts
 /* utils/fixtures.ts */
@@ -700,6 +820,213 @@ export const test = base.extend<TestOptions>({
 ```
 
 #### 29.2.3 Request Handler Implementation
+
+**Subsection Summary**
+- Shows the complete `RequestHandler` class with all fluent setter methods: `url()`, `path()`, `params()`, `headers()`, `body()`
+- Introduces a `defaultBaseUrl` constant that is used when no custom URL is provided
+- The `getUrl()` method uses a ternary-like fallback: `this.baseUrl || this.defaultBaseUrl`
+- Screenshots demonstrate console output: one with a custom random URL and one using the default base URL
+
+```ts
+/* utils/request-handler.ts */
+export class RequestHandler {
+  private baseUrl: string = "";
+  private defaultBaseUrl: string = "https://conduit-api.bondaracademy.com/api";
+  private apiPath: string = "";
+  private queryParams: object = {};
+  private apiHeaders: object = {};
+  private apiBody: object = {};
+
+  url(url: string) {
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string) {
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object) {
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: object) {
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object) {
+    this.apiBody = body;
+    return this;
+  }
+
+  getUrl() {    // 👈🏽 ✅
+    const url = new URL(`${this.baseUrl || this.defaultBaseUrl}${this.apiPath}`);
+    console.log("\n🚀 url: ", url.toString(), "\n");
+  }
+}
+```
+
+![with a random url](../img/section04-lecture029-002.png)
+
+![with a base url](../img/section04-lecture029-003.png)
+
+
+#### 29.2.4 Adding a for loop
+
+**Subsection Summary**
+- Enhances `getUrl()` to iterate over `queryParams` and append each key-value pair to the URL using `url.searchParams.append()`
+- Provides detailed step-by-step explanation of `Object.entries()`, destructuring in for-of loops, and the `searchParams.append()` method
+- Demonstrates how the loop transforms an object like `{ tag: "dragons", limit: 5 }` into query string `?tag=dragons&limit=5`
+- Shows automatic type coercion: numbers and booleans are converted to strings
+
+```ts
+/* utils/request-handler.ts */
+export class RequestHandler {
+  private baseUrl: string = "";
+  private defaultBaseUrl: string = "https://conduit-api.bondaracademy.com/api";
+  private apiPath: string = "";
+  private queryParams: object = {};
+  private apiHeaders: object = {};
+  private apiBody: object = {};
+
+  url(url: string) {
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string) {
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object) {
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: object) {
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object) {
+    this.apiBody = body;
+    return this;
+  }
+
+  getUrl() {
+    const url = new URL(`${this.baseUrl || this.defaultBaseUrl}${this.apiPath}`);
+
+    for (const [key, value] of Object.entries(this.queryParams)) {
+      url.searchParams.append(key, value);
+    }   // 👈🏽 ✅
+    console.log("\n🚀 url: ", url.toString(), "\n");
+  }
+}
+```
+
+What does mean this `for` loop?
+
+```ts
+// 1. Object.entries(this.queryParams)
+//    ────────────────────────────────────────────────
+//    Turns this kind of object:
+
+this.queryParams = {
+  tag: "dragons",
+  author: "jake",
+  favorited: "true",
+  limit: 10,
+  offset: 0
+};
+
+//    into this kind of array of arrays:
+
+[
+  ["tag",        "dragons"],
+  ["author",     "jake"],
+  ["favorited",  "true"],
+  ["limit",      10],
+  ["offset",     0]
+]
+```
+
+```ts
+// 2. for (const [key, value] of ... )
+//    ────────────────────────────────────────────────
+//    This is modern JavaScript destructuring inside a for-of loop.
+//    In every iteration you get:
+
+// Iteration 1:  key = "tag",       value = "dragons"
+// Iteration 2:  key = "author",    value = "jake"
+// Iteration 3:  key = "favorited", value = "true"
+// ...
+```
+
+```ts
+// 3. url.searchParams.append(key, value)
+//    ────────────────────────────────────────────────
+//    This is the **official browser/standard way** to add query string parameters.
+//
+//    What it actually does under the hood:
+
+url.searchParams.append("tag", "dragons");
+// → adds   ?tag=dragons
+
+url.searchParams.append("author", "jake");
+// → adds   &author=jake
+
+url.searchParams.append("limit", 10);
+// → adds   &limit=10     (numbers get automatically converted to string)
+```
+
+```ts
+// If you called:
+new RequestHandler()
+  .path("/articles")
+  .params({
+    tag: "dragons",
+    limit: 5,
+    favorited: false
+  });
+
+// The loop produces this URL:
+
+"https://conduit-api.bondaracademy.com/api/articles?tag=dragons&limit=5&favorited=false"
+```
+
+#### 29.2.5 Test Implementation
+
+**Subsection Summary**
+- Demonstrates how to use the `RequestHandler` in a test via the custom fixture `api`
+- Shows the fluent API in action: chaining `url()`, `path()`, `params()`, `headers()`, `body()`, and `getUrl()`
+- The 💥 emoji indicates this code will break once `getUrl()` is made private in the next subsection
+
+```ts
+/* tests/04-smokeTestWithFixture.spec.ts */
+import { test } from "../utils/fixtures";
+
+test("First Test using RequestHandler class", async ({ api }) => {
+  api
+    .url("https://random-url.com/api")
+    .path("/articles")
+    .params({ limit: 10, offset: 0, foo: "bar" })
+    .headers({ Authorization: "authToken" })
+    .body({ user: { email: "suspiros@test.com", password: "Test!001" } })
+    .getUrl();  // 💥
+});
+```
+
+#### 29.2.6 Updating to `private getUrl()` method
+
+**Subsection Summary**
+- Encapsulates `getUrl()` by changing it from public to `private` visibility
+- This follows the principle of information hiding: internal URL construction is an implementation detail
+- The method now returns `url.toString()` instead of just logging, making it usable by other internal methods
+- External code (tests) should not call `getUrl()` directly; instead, it will be called internally by request methods like `get()`, `post()`, etc.
 
 ```ts
 /* utils/request-handler.ts */
@@ -743,40 +1070,63 @@ export class RequestHandler {
       url.searchParams.append(key, value);
     }
     console.log("\n🚀 url: ", url.toString(), "\n");
+
+    return url.toString();   // 👈🏽 ✅
   }
 }
 ```
 
-#### 29.2.4 Test Implementation
+### 🐞 29.3 Issues
 
-```ts
-/* tests/04-smokeTestWithFixture.spec.ts */
-import { test } from "../utils/fixtures";
+- Duplicate subsection numbering: two sections labeled as 29.2.5 in the original content
+- Typo in original subsection title: "implemantion" instead of "implementation"
+- Using generic `object` type instead of specific TypeScript interfaces reduces type safety
+- The `getUrl()` method transitions from public to private mid-lesson, which could confuse readers about the intended API
+- No error handling for malformed URLs or missing required parameters
+- The `console.log` statement in `getUrl()` should be removed or made conditional for production use
 
-test("First Test using RequestHandler class", async ({ api }) => {
-  api
-    .url("https://random-url.com/api")
-    .path("/articles")
-    .params({ limit: 10, offset: 0, foo: "bar" })
-    .headers({ Authorization: "authToken" })
-    .body({ user: { email: "suspiros@test.com", password: "Test!001" } })
-    .getUrl();  // 💥
-});
-```
-
-### 🐞 29.3 Issues:
+| Issue | Status | Log/Error |
+|---|---|---|
+| Duplicate subsection numbering (two 29.2.5) | ✅ Fixed | Updated to 29.2.5 and 29.2.6 in TOC and content |
+| Typo "implemantion" | ✅ Fixed | Changed to "Implementation" in `docs/LECTURE_STEPS.md:933` |
+| Generic `object` type for params | ⚠️ Identified | `utils/request-handler.ts:6-8` — Use `Record<string, string \| number \| boolean>` instead |
+| No URL validation | ⚠️ Identified | `utils/request-handler.ts:52-57` — Invalid base URL or path could throw at runtime |
+| Console.log in production code | ℹ️ Low Priority | `utils/request-handler.ts:58` — Consider using a debug flag or removing |
+| Missing return type annotation | ℹ️ Informational | `utils/request-handler.ts:52` — Add `: string` return type to `getUrl()` |
 
 ### 🧱 29.4 Pending Fixes (TODO)
 
-```md
-- [ ] The `getUrl()` method is private but called directly in tests - needs to be made public or a public method should wrap it
-- [ ] Add proper TypeScript types for `queryParams`, `apiHeaders`, and `apiBody` instead of using `object`
-- [ ] Implement error handling for invalid URLs
-- [ ] Add validation for required parameters before building URL
+- [ ] Replace `object` type with proper interfaces in `utils/request-handler.ts:6-8`:
+
+```ts
+// Suggested type definitions
+type QueryParams = Record<string, string | number | boolean>;
+type ApiHeaders = Record<string, string>;
+type ApiBody = Record<string, unknown>;
 ```
 
-<br>
+- [ ] Add URL validation in `getUrl()` method at `utils/request-handler.ts:52`:
 
+```ts
+private getUrl(): string {
+  if (!this.apiPath) {
+    throw new Error("API path is required");
+  }
+  const baseUrl = this.baseUrl || this.defaultBaseUrl;
+  if (!baseUrl) {
+    throw new Error("Base URL is required");
+  }
+  // ... rest of implementation
+}
+```
+
+- [ ] Add explicit return type annotation to `getUrl()` method: `private getUrl(): string`
+- [ ] Consider adding a debug mode flag to control `console.log` output in `utils/request-handler.ts:58`
+- [ ] Update tests in `tests/04-smokeTestWithFixture.spec.ts` to not call `getUrl()` directly since it's now private
+
+[↑ top - Lesson 029 — URL Builder](#-029-lesson-029--url-builder)
+
+<br>
 
 ## 🔧 030. Lesson 030 — Request Handler Constructor
 
@@ -801,7 +1151,9 @@ This change enables the `RequestHandler` to make actual API calls using Playwrig
 
 ### ⚙️ 30.2 Updating code according the context
 
-#### 30.2.1 Request Handler Constructor Implementation
+#### 30.2.1 Request Handler Constructor Implementation:
+
+`APIRequestContext` is the **class**/**type** that allows you to communicate directly with APIs (GET, POST, PUT, DELETE, etc.) without needing to open a browser.
 
 ```ts
 /* utils/request-handler.ts */
@@ -853,6 +1205,8 @@ export class RequestHandler {
       url.searchParams.append(key, value);
     }
     console.log("\n🚀 url: ", url.toString(), "\n");
+
+    return url.toString();
   }
 }
 ```
@@ -877,6 +1231,63 @@ export const test = base.extend<TestOptions>({
 });
 ```
 
+#### 30.2.3 Update the `request-handler.ts`:
+```ts
+/* utils/request-handler.ts */
+import { APIRequestContext } from "@playwright/test";
+
+export class RequestHandler {
+  private request: APIRequestContext;
+  private baseUrl: string;
+  private defaultBaseUrl: string;  // 👈🏽 ✅
+  private apiPath: string = "";
+  private queryParams: object = {};
+  private apiHeaders: object = {};
+  private apiBody: object = {};
+
+  constructor(request: APIRequestContext, apiBaseUrl: string){
+    this.request = request;
+    this.defaultBaseUrl = apiBaseUrl;
+  }
+
+  url(url: string) {
+    this.baseUrl = url;
+    return this;
+  }
+
+  path(path: string) {
+    this.apiPath = path;
+    return this;
+  }
+
+  params(params: object) {
+    this.queryParams = params;
+    return this;
+  }
+
+  headers(headers: object) {
+    this.apiHeaders = headers;
+    return this;
+  }
+
+  body(body: object) {
+    this.apiBody = body;
+    return this;
+  }
+
+  private getUrl() {
+    const url = new URL(`${this.baseUrl || this.defaultBaseUrl}${this.apiPath}`);
+
+    for (const [key, value] of Object.entries(this.queryParams)) {
+      url.searchParams.append(key, value);
+    }
+    console.log("\n🚀 url: ", url.toString(), "\n");
+
+    return url.toString();
+  }
+}
+```
+
 ### 🐞 30.3 Issues:
 
 ### 🧱 30.4 Pending Fixes (TODO)
@@ -888,6 +1299,7 @@ export const test = base.extend<TestOptions>({
 - [ ] Add JSDoc comments to document constructor parameters
 ```
 
+[↑ top - Lesson 030 — Request Handler Constructor](#-030-lesson-030--request-handler-constructor)
 
 <br>
 
@@ -982,6 +1394,10 @@ export class RequestHandler {
   }
 }
 ```
+
+That's why `apiHeaders` must be `Record<string, string>` instead of an `object`.
+
+![replacing object by Record<string, string>](../img/section04-lecture031-001.png)
 
 #### 31.2.2 Test Implementation
 
@@ -1157,9 +1573,9 @@ test("Third Test - GET Tags", async ({ api }) => {  // 👈🏽 ✅
 - [ ] Add support for different response content types (not just JSON)
 ```
 
+[↑ top - Lesson 031 — Get Requester](#-031-lesson-031--get-requester)
 
 <br>
-
 
 ## 🔧 032. Lesson 032 — Post, Put, and Delete Requester
 
@@ -1470,6 +1886,7 @@ test("Create, Update and Delete an Article", async ({ api }) => {
 - [ ] Consider adding a method to reset the handler state between requests
 ```
 
+[↑ top - Lesson 032 — Post, Put, and Delete Requester](#-032-lesson-032--post-put-and-delete-requester)
 
 <br>
 
@@ -1593,6 +2010,7 @@ test("Test logger", async () => {
 - [ ] Add filtering capabilities to retrieve specific log entries
 ```
 
+[↑ top - Lesson 033 — Custom Logger](#-033-lesson-033--custom-logger)
 
 <br>
 
@@ -1645,7 +2063,7 @@ export const test = base.extend<TestOptions>({
 });
 ```
 
-#### 34.2.2 Update `request-handler.ts` File with Logger Integration
+#### 34.2.2 Modify/Update `request-handler.ts` File with Logger Integration
 ```ts
 /* utils/request-handler.ts */
 import { APIRequestContext, expect } from "@playwright/test";
@@ -1696,7 +2114,7 @@ export class RequestHandler {
     // Get the URL
     const url = this.getUrl();
     // Log the GET request
-    this.logger.logRequest("GET", url, this.apiHeaders, this.apiBody);  // 👈🏽 ✅
+    this.logger.logRequest("GET", url, this.apiHeaders);  // 👈🏽 ✅
     // Send the request
     const response = await this.request.get(url, {
       headers: this.apiHeaders,
@@ -1977,6 +2395,8 @@ export class RequestHandler {
 - [ ] Consider adding validation for response headers in addition to status codes
 ```
 
+[↑ top - Lesson 034 — Status Code Validator](#-034-lesson-034--status-code-validator)
+
 <br>
 
 ## 🔧 035. Lesson 035 — Assertions Enhancement
@@ -2018,16 +2438,16 @@ using this docs a base: [Add custom matchers using expect.extend](https://playwr
 
 ```tsx
 /* utils/custom-expect.ts */
-import { expect as baseExpect } from "@playwright/test";
-import { APILogger } from "./logger";
+import { expect as baseExpect } from "@playwright/test";        // 👈🏽 ✅ (1)
+import { APILogger } from "./logger";                           // 👈🏽 ✅ (2)
 
-let apiLogger: APILogger;
+let apiLogger: APILogger;                                       // 👈🏽 ✅ (2)
 
-export const setCustomExpectLogger = (logger: APILogger) => {
+export const setCustomExpectLogger = (logger: APILogger) => {   // 👈🏽 ✅ (3)
   apiLogger = logger;
 };
 
-export const expect = baseExpect.extend({
+export const expect = baseExpect.extend({                       // 👈🏽 ✅ (1)
   // ....
 });
 ```
@@ -2462,6 +2882,8 @@ test("Second Test - GET Articles", async ({ api }) => {
 - [ ] Add unit tests for custom matchers
 ```
 
+[↑ top - Lesson 035 — Assertions Enhancement](#-035-lesson-035--assertions-enhancement)
+
 <br>
 
 ## 🔧 036. Lesson 036 — API Configuration File
@@ -2601,9 +3023,9 @@ test("Second Test - GET Articles", async ({ api }) => {
 #### 36.2.4 Update `config` according the environment:
 ```ts
 /* api-test.config.ts */
-const processENV = process.env.TEST_ENV;        // 👈🏽 ✅
-const env = processENV || "prod";                // 👈🏽 ✅ (Note: Consider using "qa" as default for safety)
-console.log("🚀 Test environment is: " + env);  // 👈🏽 ✅
+const processENV = process.env.TEST_ENV;            // 👈🏽 ✅
+const env = processENV || "dev";                   // 👈🏽 ✅ (Note: Consider using "qa" as default for safety)
+console.log("🚀 Test environment is: " + env);      // 👈🏽 ✅
 
 const config = {
   apiUrl: "https://conduit-api.bondaracademy.com/api",
@@ -2697,6 +3119,8 @@ set TEST_ENV=prod && npx playwright test [test_relative_path]
 - [ ] Implement config validation function to ensure all required fields are present before tests run
 - [ ] Consider adding support for config file overrides (e.g., `api-test.config.local.ts`) for local development
 ```
+
+[↑ top - Lesson 036 — API Configuration File](#-036-lesson-036--api-configuration-file)
 
 <br>
 
@@ -3111,6 +3535,9 @@ The implementation is complete. The `clearUpFields()` method ensures that each r
 - [ ] Document the stateful nature of `RequestHandler` in class-level JSDoc to warn developers about the need for cleanup between requests
 - [ ] Consider adding a flag or option to disable automatic cleanup for advanced use cases where state persistence might be desired
 ```
+
+[↑ top - Lesson 037 — Request Handler Improvement](#-037-lesson-037--request-handler-improvement)
+
 <br>
 
 ## 🔧 038. Lesson 038 — Authorization Helper
@@ -3164,6 +3591,27 @@ When to consider alternatives:
 ### ⚙️ 38.2 Updating code according the context:
 
 #### 38.2.1 Adding `helpers/createToken.ts` file:
+
+* Replace in `beforeAll` the `tokenResponse` for  `createToken` function in `/helpers` folder
+
+```ts
+test.beforeAll("runs before all", async ({ api, config }) => {
+  console.log("\n\n\n🚀 LOGIN");
+  //  👈🏽 👈🏽 👈🏽 👈🏽 👈🏽 
+  const tokenResponse = await api
+    .path("/users/login")
+    .body({ user: { email: config.userEmail, password: config.userPassword } })
+    .postRequest(200);
+
+  authToken = "Token " + tokenResponse.user.token;
+  //  👈🏽 👈🏽 👈🏽 👈🏽 👈🏽
+
+  console.log("\n 🔐 authToken: ", authToken);
+  console.log("� tokenResponse.user: ", tokenResponse.user);
+});
+```
+
+
 ```ts
 /* helpers/createToken.ts */
 import { RequestHandler } from "../utils/request-handler";
@@ -3206,7 +3654,7 @@ test("Side Effect Test", async ({ api }) => {
 });
 ``` 
 
-![](../img/section04-lecture038-001.png)
+![token displayed](../img/section04-lecture038-001.png)
 
 Issue:
 * dependency on the `api` fixture
@@ -3299,6 +3747,211 @@ test.beforeAll("runs before all", async ({ config }) => {
 - [ ] Standardize auth header formatting (`Token` vs `Bearer`) via a helper (e.g. `formatAuthHeader(token)`) if supporting multiple APIs/environments. Files: `helpers/createToken.ts`, tests using `.headers({ Authorization: authToken })`
 ```
 
+[↑ top - Lesson 038 — Authorization Helper](#-038-lesson-038--authorization-helper)
+
+
+<br>
+
+## 🔧 039. Lesson 039 — *Playwright Workers*
+
+[🧳 Section 04: Building a Framework](#-section-04-building-a-framework)
+
+### 📑 Table of Contents:
+- [039. Lesson 039 — *Playwright Workers*](#-039-lesson-039--playwright-workers)
+- [039.1 Context](#-0391-context)
+- [039.2 Updating code according the context](#-0392-updating-code-according-the-context)
+  - [039.2.1 Main Playwright config with workers](#03921-main-playwright-config-with-workers)
+  - [039.2.2 fullyParallel: true](#03922-fullyparallel-true)
+  - [039.2.3 fullyParallel: false](#03923-fullyparallel-false)
+  - [039.2.4 workers: undefined (use default)](#03924-workers-undefined-use-default)
+  - [039.2.5 workers: 1 locally (single worker)](#03925-workers-1-locally-single-worker)
+  - [039.2.6 workers: 2 locally (two parallel workers)](#03926-workers-2-locally-two-parallel-workers)
+- [039.3 Issues](#-0393-issues)
+- [039.4 Pending Fixes (TODO)](#-0394-pending-fixes-todo)
+
+### 🧠 039.1 Context:
+
+**Playwright Workers** are the processes that run your tests in parallel. Each worker is an independent Node.js process that launches its own browser instance(s). The number of workers directly affects execution speed and resource usage.
+
+#### **Key Concepts**
+
+1. **Default behavior**: Playwright runs **test files** in parallel across workers. By default, the number of workers is ~50% of CPU cores. Use `workers: undefined` to keep this auto-detection.
+2. **fullyParallel**: When `true`, tests **within the same file** also run in parallel; when `false`, tests in a file run sequentially in the same worker.
+3. **workers value**: Can be a number (`1`, `2`, etc.), a percentage string (`'50%'`), or `undefined` (default auto-detection).
+4. **CI vs local**: In CI environments, using `workers: 1` avoids resource contention, flakiness from concurrent API calls, and ensures predictable execution. Locally, more workers speed up feedback.
+5. **Environment detection**: `process.env.CI` is typically set by CI providers (GitHub Actions, GitLab CI, Jenkins, etc.) when running in a pipeline.
+
+#### **Advantages**
+
+- **Faster feedback**: Multiple workers run tests concurrently, reducing total execution time.
+- **Resource control**: Explicit `workers` lets you match parallelism to available CPU, memory, or external API limits.
+- **CI stability**: Using `workers: 1` in CI reduces race conditions and resource exhaustion.
+- **Flexibility**: Override at runtime with `npx playwright test --workers 4`.
+
+#### **Disadvantages/Gotchas**
+
+- **Too many workers**: Can cause resource contention (CPU, memory, network), flaky tests, or API rate limits.
+- **Shared state**: Tests running in parallel may conflict if they share databases, files, or external services.
+- **Debugging**: Failures in parallel runs can be harder to reproduce; sometimes `workers: 1` helps isolate issues.
+- **Redundant config**: `workers: process.env.CI ? 1 : 1` is equivalent to `workers: 1` (both branches identical).
+
+#### **When to Consider Alternatives**
+
+- Use `workers: undefined` locally when you want Playwright to choose optimal parallelism based on CPU cores.
+- Use a percentage (`workers: '50%'`) when you want parallelism proportional to available cores across different machines.
+- Use `--workers=N` from the CLI for ad-hoc overrides without changing the config file.
+
+#### **Project Implementation**
+
+In `playwright.config.ts`, the project uses `workers: process.env.CI ? 1 : 1`, effectively always running with one worker. This is suitable for API testing where sequential execution may reduce flakiness or avoid overwhelming the target API. The `fullyParallel: true` option still allows parallel execution within a single worker when the test runner supports it at the file level.
+
+---
+
+### ⚙️ 039.2 Updating code according the context:
+
+#### **Summary**
+
+- Explains how to configure Playwright parallelism via `fullyParallel` and `workers`.
+- Contrasts `fullyParallel: true` vs `false` for intra-file test execution.
+- Demonstrates `workers` with `undefined`, `1`, and `2` to show CI vs local trade-offs.
+- Shows the full project config and how these options fit together.
+
+---
+
+#### 039.2.1 Main Playwright config with workers
+
+**Subsection Summary**
+
+- Full `playwright.config.ts` showing the standard project setup.
+- Uses `fullyParallel: true` to allow parallel test execution.
+- Demonstrates conditional `workers` based on `process.env.CI` (1 in CI, 1 locally).
+- Integrates `forbidOnly`, `retries`, `reporter`, and `use` options in a single config.
+
+```ts
+/* playwright.config.ts */
+import { defineConfig, devices } from "@playwright/test";
+export default defineConfig({
+  testDir: "./tests",
+  fullyParallel: true,                                // 👈🏽 ✅ (1)
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : 1,
+  reporter: [["html"], ["list"]],
+  use: {
+    trace: "on-first-retry",
+    viewport: {
+      width: 1920,
+      height: 1080,
+    },
+    actionTimeout: 2000,
+  },
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+  ]
+});
+``` 
+
+#### 039.2.2 fullyParallel: true
+
+**Subsection Summary**
+
+- Enables parallel execution of tests both across files and within a file.
+- Maximizes throughput but may cause resource contention or flaky tests if tests share state.
+- Recommended when tests are independent and isolated.
+
+```ts
+/* playwright.config.ts */
+export default defineConfig({
+  fullyParallel: true,
+})
+``` 
+
+
+#### 039.2.3 fullyParallel: false
+
+**Subsection Summary**
+
+- Tests within the same file run sequentially in the same worker.
+- Useful when tests in a file share setup/teardown or depend on execution order.
+- Reduces parallelism within files while still allowing parallel file execution across workers.
+
+```ts
+/* playwright.config.ts */
+export default defineConfig({
+  fullyParallel: false,
+})
+``` 
+
+#### 039.2.4 workers: undefined (use default)
+
+**Subsection Summary**
+
+- `undefined` means “use Playwright’s default” (typically ~50% of CPU cores).
+- In CI, `workers: 1` limits to a single worker for stability; locally, `undefined` allows auto-scaling.
+- Common pattern: `workers: process.env.CI ? 1 : undefined` for CI stability and local speed.
+
+```ts
+/* playwright.config.ts */
+export default defineConfig({
+  fullyParallel: true,
+  workers: process.env.CI ? 1 : undefined,
+})
+``` 
+
+
+#### 039.2.5 workers: 1 locally (single worker)
+
+**Subsection Summary**
+
+- Both CI and local use exactly one worker.
+- All tests run sequentially, which is predictable and reduces flakiness but slower locally.
+- Suitable for API tests that hit shared endpoints or when debugging is prioritized.
+
+```ts
+/* playwright.config.ts */
+export default defineConfig({
+  fullyParallel: true,
+  workers: process.env.CI ? 1 : 1,
+})
+``` 
+
+#### 039.2.6 workers: 2 locally (two parallel workers)
+
+**Subsection Summary**
+
+- CI still uses 1 worker; local runs with 2 workers.
+- Doubles local parallelism for faster feedback without overloading the machine.
+- Example of a gradual increase from `1` to `2` for local development.
+
+```ts
+/* playwright.config.ts */
+export default defineConfig({
+  fullyParallel: true,
+  workers: process.env.CI ? 1 : 2,
+})
+``` 
+
+
+### 🐞 039.3 Issues:
+
+- **Redundant workers config**: Both branches of the ternary use `1`, so the conditional adds no value.
+- **Potential underutilization**: Using `workers: 1` locally may slow down feedback compared to `undefined` or a higher number on multi-core machines.
+
+| Issue | Status | Log/Error |
+|---|---|---|
+| Redundant `workers: process.env.CI ? 1 : 1` — same value in both branches | ℹ️ Informational | `playwright.config.ts:23` — can simplify to `workers: 1` |
+| Local execution always single-worker | ℹ️ Informational | `playwright.config.ts:23` — consider `workers: process.env.CI ? 1 : undefined` or `2` for faster local runs |
+
+### 🧱 039.4 Pending Fixes (TODO)
+
+- [ ] Simplify to `workers: 1` if single-worker behavior is intentional for both CI and local. File: `playwright.config.ts` (line 23)
+- [ ] Consider `workers: process.env.CI ? 1 : undefined` to use auto-detected workers locally while keeping CI stable. File: `playwright.config.ts` (line 23)
+- [ ] Consider `workers: process.env.CI ? 1 : 2` for faster local feedback if tests are isolated. File: `playwright.config.ts` (line 23)
+
+[↑ top — 039. Lesson 039 — *Playwright Workers*](#-039-lesson-039--playwright-workers)
 
 
 
@@ -3319,14 +3972,6 @@ test.beforeAll("runs before all", async ({ config }) => {
 
 ## 🔧 XXX. Lesson XXX — *{{LESSON_TITLE}}*
 
-- [XXX. Lesson XXX — *Fluent Interface Design*](#-xxx-lesson-xxx---fluent-interface-design)
-  - [XXX.1 Context](#-xxx1-context)
-  - [XXX.2 Updating code according the context](#-xxx2-updating-code-according-the-context)
-    - [XXX.2.1](#xxx21)
-    - [XXX.2.2](#xxx22)
-    - [XXX.2.3](#xxx23)
-  - [XXX.3 Issues](#-xxx3-issues)
-  - [XXX.4 Pending Fixes (TODO)](#-xxx4-pending-fixes-todo)
 
 ### 🧠 XXX.1 Context
 
